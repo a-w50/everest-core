@@ -78,6 +78,7 @@ macro(cpp_module_setup)
         DEPENDS ${GENERATED_MODULE_DIR}/${MODULE_NAME}
     )
 
+    add_dependencies(${MOD_MODULE_NAME} ld-ev_${MODULE_NAME} generate_type_files)
     add_dependencies(${MOD_MODULE_NAME} ld-ev_${MODULE_NAME} generate_interface_files)
 endmacro()
 

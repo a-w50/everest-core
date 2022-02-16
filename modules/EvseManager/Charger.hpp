@@ -28,7 +28,7 @@
 #include "utils/thread.hpp"
 #include "ld-ev.hpp"
 #include <sigslot/signal.hpp>
-#include <generated/board_support_AC/Interface.hpp>
+#include <generated/interfaces/board_support_AC/Interface.hpp>
 
 namespace module {
 

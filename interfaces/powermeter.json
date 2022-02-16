@@ -128,27 +128,7 @@
                 },
                 "current_A": {
                     "description": "Current in ampere",
-                    "type": "object",
-                    "required": ["L1"],
-                    "properties": {
-                        "L1": {
-                            "description": "L1 value only",
-                            "type": "number"
-                        },
-                        "L2": {
-                            "description": "L2 value only",
-                            "type": "number"
-                        },
-                        "L3": {
-                            "description": "L3 value only",
-                            "type": "number"
-                        },
-                        "N": {
-                            "description": "Neutral value only",
-                            "type": "number"
-                        }
-                    },
-                    "additionalProperties": false
+                    "$ref": "/units#/Currents"
                 },
                 "frequency_Hz": {
                     "description": "Grid frequency in Hertz",

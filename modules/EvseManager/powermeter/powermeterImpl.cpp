@@ -4,7 +4,7 @@ namespace module {
 namespace powermeter {
 
 void powermeterImpl::init() {
-    mod->r_powermeter->subscribe_powermeter([this](json p) {
+    mod->r_powermeter->subscribe_powermeter([this](::powermeter::Powermeter p) {
         // Republish data on proxy powermeter interface
         publish_powermeter(p);
     });

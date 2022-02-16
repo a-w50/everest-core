@@ -64,7 +64,8 @@ find_program(EV_CLI
     REQUIRED
 )
 
-set(GENERATED_OUTPUT_DIR ${CMAKE_BINARY_DIR}/generated)
+set(GENERATED_HEADER_DIR ${CMAKE_BINARY_DIR}/generated)
+set(GENERATED_OUTPUT_DIR ${GENERATED_HEADER_DIR}/generated)
 
 find_package(Boost COMPONENTS filesystem program_options system thread REQUIRED)
 
@@ -96,11 +97,16 @@ endif()
 
 
 # auto generate headers
-set(GENERATED_HEADER_DIR ${GENERATED_OUTPUT_DIR}/interfaces)
+add_subdirectory(types)
 add_subdirectory(interfaces)
 
 # modules
 add_subdirectory(modules)
+
+# types
+install(DIRECTORY "types/" DESTINATION types
+        FILES_MATCHING PATTERN "*.json"
+)
 
 # interfaces
 install(DIRECTORY "interfaces/" DESTINATION interfaces

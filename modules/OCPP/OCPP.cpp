@@ -2,6 +2,8 @@
 // Copyright 2020 - 2022 Pionix GmbH and Contributors to EVerest
 #include "OCPP.hpp"
 
+#include <cmath>
+
 namespace module {
 
 void OCPP::init() {
@@ -42,52 +44,53 @@ void OCPP::init() {
 
     this->charge_point->start();
 
-    this->r_powermeter->subscribe_powermeter([this](Object powermeter) {
+    this->r_powermeter->subscribe_powermeter([this](powermeter::Powermeter powermeter) {
         this->charge_point->receive_power_meter(this->connector, powermeter); //
     });
 
-    this->r_evse_manager->subscribe_limits([this](Object limits) {
-        auto max_current = limits["max_current"].get<double>();
+    this->r_evse_manager->subscribe_limits([this](evse_manager::Limits limits) {
+        auto max_current = limits.max_current;
         this->charge_point->receive_max_current_offered(this->connector, max_current);
 
-        auto number_of_phases = limits["nr_of_phases_available"].get<int32_t>();
+        auto number_of_phases = limits.nr_of_phases_available;
         this->charge_point->receive_number_of_phases_available(this->connector, number_of_phases);
     });
 
-    this->r_evse_manager->subscribe_session_events([this](Object session_events) {
-        auto event = session_events["event"];
-        if (event == "Enabled") {
+    this->r_evse_manager->subscribe_session_events([this](evse_manager::Session_events session_events) {
+        auto event = session_events.event;
+        // auto event = session_events["event"];
+        if (event == evse_manager::Event::Enabled) {
             // TODO(kai): decide if we need to inform libocpp about such an event
-        } else if (event == "Disabled") {
+        } else if (event == evse_manager::Event::Disabled) {
             // TODO(kai): decide if we need to inform libocpp about such an event
-        } else if (event == "SessionStarted") {
-            auto session_started = session_events["session_started"];
+        } else if (event == evse_manager::Event::SessionStarted) {
+            auto session_started = session_events.session_started.value();
             auto timestamp = ocpp1_6::DateTime(
-                std::chrono::system_clock::time_point(std::chrono::seconds(session_started["timestamp"].get<int>())));
-            auto energy_Wh_import = session_started["energy_Wh_import"].get<double>();
+                std::chrono::system_clock::time_point(std::chrono::seconds(std::lrint(session_started.timestamp))));
+            auto energy_Wh_import = session_started.energy_Wh_import;
             this->charge_point->start_session(this->connector, timestamp, energy_Wh_import);
-        } else if (event == "ChargingStarted") {
+        } else if (event == evse_manager::Event::ChargingStarted) {
             this->charge_point->start_charging(this->connector);
-        } else if (event == "ChargingPausedEV") {
+        } else if (event == evse_manager::Event::ChargingPausedEV) {
             this->charge_point->suspend_charging_ev(this->connector);
-        } else if (event == "ChargingPausedEVSE") {
+        } else if (event == evse_manager::Event::ChargingPausedEVSE) {
             this->charge_point->suspend_charging_evse(this->connector);
-        } else if (event == "ChargingResumed") {
+        } else if (event == evse_manager::Event::ChargingResumed) {
             this->charge_point->resume_charging(this->connector);
-        } else if (event == "SessionFinished") {
-            auto session_finished = session_events["session_finished"];
+        } else if (event == evse_manager::Event::SessionFinished) {
+            auto session_finished = session_events.session_finished.value();
             auto timestamp =
-                std::chrono::system_clock::time_point(std::chrono::seconds(session_finished["timestamp"].get<int>()));
-            auto energy_Wh_import = session_finished["energy_Wh_import"].get<double>();
+                std::chrono::system_clock::time_point(std::chrono::seconds(std::lrint(session_finished.timestamp)));
+            auto energy_Wh_import = session_finished.energy_Wh_import;
             this->charge_point->stop_session(this->connector, ocpp1_6::DateTime(timestamp), energy_Wh_import);
-        } else if (event == "Error") {
-            auto error = session_events["error"];
-            if (error == "OverCurrent") {
+        } else if (event == evse_manager::Event::Error) {
+            auto error = session_events.error.value();
+            if (error == evse_manager::Error::OverCurrent) {
                 this->charge_point->error(this->connector, ocpp1_6::ChargePointErrorCode::OverCurrentFailure);
             } else {
-                this->charge_point->vendor_error(this->connector, error);
+                this->charge_point->vendor_error(this->connector, evse_manager::error_to_string(error));
             }
-        } else if (event == "PermanentFault") {
+        } else if (event == evse_manager::Event::PermanentFault) {
             this->charge_point->permanent_fault(this->connector);
         }
     });

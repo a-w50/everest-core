@@ -42,6 +42,31 @@ SimulationData json_to_simulation_data(Object& v) {
     return s;
 }
 
+SimulationData value_to_simulation_data(::yeti_simulation_control::Value& v) {
+    SimulationData s;
+
+    s.cp_voltage = v.cp_voltage.value();
+    s.diode_fail = v.diode_fail.value();
+    s.error_e = v.error_e.value();
+    s.pp_resistor = v.pp_resistor.value();
+    s.rcd_current = v.rcd_current.value();
+
+    s.currentL1 = v.currents.value().L1.value();
+    s.currentL2 = v.currents.value().L2.value();
+    s.currentL3 = v.currents.value().L3.value();
+    s.currentN = v.currents.value().N.value();
+
+    s.voltageL1 = v.voltages.value().L1.value();
+    s.voltageL2 = v.voltages.value().L2.value();
+    s.voltageL3 = v.voltages.value().L3.value();
+
+    s.freqL1 = v.frequencies.value().L1.value();
+    s.freqL2 = v.frequencies.value().L2.value();
+    s.freqL3 = v.frequencies.value().L3.value();
+
+    return s;
+}
+
 void yeti_simulation_controlImpl::init() {
     mod->serial.signalSimulationFeedback.connect(
         [this](const SimulationFeedback& s) { publish_simulation_feedback(simulation_feedback_to_json(s)); });
@@ -55,8 +80,8 @@ void yeti_simulation_controlImpl::handle_enable(bool& value) {
     mod->serial.enableSimulation(value);
 };
 
-void yeti_simulation_controlImpl::handle_setSimulationData(Object& value) {
-    mod->serial.setSimulationData(json_to_simulation_data(value));
+void yeti_simulation_controlImpl::handle_setSimulationData(::yeti_simulation_control::Value& value){
+    mod->serial.setSimulationData(value_to_simulation_data(value));
 };
 
 } // namespace yeti_simulation_control

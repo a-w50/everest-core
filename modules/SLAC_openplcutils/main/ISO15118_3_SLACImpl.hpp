@@ -5,10 +5,10 @@
 
 //
 // AUTO GENERATED - MARKED REGIONS WILL BE KEPT
-// template version 1
+// template version 3
 //
 
-#include <generated/ISO15118_3_SLAC/Implementation.hpp>
+#include <generated/interfaces/ISO15118_3_SLAC/Implementation.hpp>
 
 #include "../SLAC_openplcutils.hpp"
 

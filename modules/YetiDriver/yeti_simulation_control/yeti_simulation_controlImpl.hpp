@@ -5,15 +5,16 @@
 
 //
 // AUTO GENERATED - MARKED REGIONS WILL BE KEPT
-// template version 1
+// template version 3
 //
 
-#include <generated/yeti_simulation_control/Implementation.hpp>
+#include <generated/interfaces/yeti_simulation_control/Implementation.hpp>
 
 #include "../YetiDriver.hpp"
 
 // ev@75ac1216-19eb-4182-a85c-820f1fc2c091:v1
 // insert your custom include headers here
+//#include <generated/types/example/example_types.hpp>
 // ev@75ac1216-19eb-4182-a85c-820f1fc2c091:v1
 
 namespace module {
@@ -35,7 +36,7 @@ public:
 protected:
     // command handler functions (virtual)
     virtual void handle_enable(bool& value) override;
-    virtual void handle_setSimulationData(Object& value) override;
+    virtual void handle_setSimulationData(::yeti_simulation_control::Value& value) override;
 
     // ev@d2d1847a-7b88-41dd-ad07-92785f06f5c4:v1
     // insert your protected definitions here

@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: Apache-2.0
-// Copyright 2020 - 2021 Pionix GmbH and Contributors to EVerest
+// Copyright Pionix GmbH and Contributors to EVerest
 #include "EvseManager.hpp"
 
 namespace module {
@@ -7,7 +7,7 @@ namespace module {
 void EvseManager::init() {
     invoke_init(*p_evse);
     invoke_init(*p_evse_energy_control);
-    invoke_init(*p_powermeter);     
+    invoke_init(*p_powermeter);
 }
 
 void EvseManager::ready() {

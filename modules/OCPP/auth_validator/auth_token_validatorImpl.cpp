@@ -1,5 +1,6 @@
 // SPDX-License-Identifier: Apache-2.0
-// Copyright 2020 - 2022 Pionix GmbH and Contributors to EVerest
+// Copyright Pionix GmbH and Contributors to EVerest
+
 #include "auth_token_validatorImpl.hpp"
 
 namespace module {
@@ -11,29 +12,29 @@ void auth_token_validatorImpl::init() {
 void auth_token_validatorImpl::ready() {
 }
 
-Object auth_token_validatorImpl::handle_validate_token(std::string& token) {
+::auth_token_validator::ResultType auth_token_validatorImpl::handle_validate_token(std::string& token) {
     auto auth_status = mod->charge_point->authorize_id_tag(token);
-    Object result;
+    ::auth_token_validator::ResultType result;
     switch (auth_status) {
     case ocpp1_6::AuthorizationStatus::Accepted:
-        result["result"] = "Accepted";
+        result.result = ::auth_token_validator::Result::Accepted;
         break;
     case ocpp1_6::AuthorizationStatus::Blocked:
-        result["result"] = "Blocked";
+        result.result = ::auth_token_validator::Result::Blocked;
         break;
     case ocpp1_6::AuthorizationStatus::Expired:
-        result["result"] = "Expired";
+        result.result = ::auth_token_validator::Result::Expired;
         break;
     case ocpp1_6::AuthorizationStatus::Invalid:
-        result["result"] = "Invalid";
+        result.result = ::auth_token_validator::Result::Invalid;
         break;
 
     default:
-        result["result"] = "Invalid";
+        result.result = ::auth_token_validator::Result::Invalid;
         break;
     }
 
-    result["reason"] = "Validation by OCPP 1.6 Central System";
+    result.reason.emplace("Validation by OCPP 1.6 Central System");
 
     return result;
 };

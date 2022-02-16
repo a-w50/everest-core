@@ -18,8 +18,8 @@ bool str_to_bool(std::string data) {
 }
 
 void evse_managerImpl::init() {
-    limits["nr_of_phases_available"] = 1;
-    limits["max_current"] = 0.;
+    limits.nr_of_phases_available = 1;
+    limits.max_current = 0.;
 
     mod->mqtt.subscribe("/external/cmd/set_max_current", [&charger = mod->charger](std::string data) { 
         charger->setMaxCurrent(std::stof(data)); 
@@ -58,7 +58,7 @@ void evse_managerImpl::ready() {
 
     mod->signalNrOfPhasesAvailable.connect([this](const int n) {
         if (n>=1 && n<=3) {
-            limits["nr_of_phases_available"] = n;
+            limits.nr_of_phases_available = n;
             publish_limits(limits);
         }
     });
@@ -111,7 +111,7 @@ void evse_managerImpl::ready() {
     mod->charger->signalMaxCurrent.connect([this](float c){
         mod->mqtt.publish("/external/state/max_current", c);
 
-        limits["max_current"] = c;
+        limits.max_current = c;
         publish_limits(limits);
     });
 

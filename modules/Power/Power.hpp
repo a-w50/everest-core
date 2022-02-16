@@ -11,11 +11,11 @@
 #include "ld-ev.hpp"
 
 // headers for provided interface implementations
-#include <generated/power_result/Implementation.hpp>
+#include <generated/interfaces/power_result/Implementation.hpp>
 
 // headers for required interface implementations
-#include <generated/power/Interface.hpp>
-#include <generated/power_in/Interface.hpp>
+#include <generated/interfaces/power/Interface.hpp>
+#include <generated/interfaces/power_in/Interface.hpp>
 
 // ev@4bf81b14-a215-475c-a1d3-0a484ae48918:v1
 // insert your custom include headers here
