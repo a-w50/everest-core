@@ -7,6 +7,15 @@
             }
         }
     },
+    "iso15118_car": {
+        "module": "JsCarV2G",
+        "config_implementation": {
+            "main": {
+                "stack_implementation": "RISE-V2G",
+                "mqtt_base_path": "everest_external/iso15118/ev"
+            }
+        }
+    },
     "evse_manager": {
         "module": "EvseManager",
         "config_module": {
@@ -48,7 +57,14 @@
                     "module_id": "yeti_driver",
                     "implementation_id": "yeti_simulation_control"
                 }
+            ],
+            "ev": [
+                {
+                    "module_id": "iso15118_car",
+                    "implementation_id": "ev"
+                }
             ]
+
         }
     },
     "auth": {

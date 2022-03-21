@@ -21,6 +21,12 @@ boot_module(async ({ setup, info, config, mqtt }) => {
 
   // subscribe vars of used modules
 
+  // ISO15118 ev setup
+  setup.uses.ev.subscribe.AC_EVPowerReady( (mod, value) => {mod.iso_pwr_ready = value;});
+  setup.uses.ev.subscribe.AC_EVSEMaxCurrent( (mod, value) => {mod.evse_maxcurrent = value;})
+  setup.uses.ev.subscribe.AC_StopFromCharger((mod) => {mod.iso_stopped = true;});
+  setup.uses.ev.subscribe.V2G_Session_Finished((mod) => {mod.v2g_finished = true;});
+
 }).then((mod) => {
   registerAllCmds(mod);
   mod.enabled = false;
@@ -86,6 +92,14 @@ function simdata_reset_defaults(mod) {
   mod.executionActive = false;
 
   mod.state = 'unplugged';
+
+  mod.v2g_finished = false;
+  mod.iso_stopped = false;
+  mod.evse_maxcurrent = 0;
+  mod.maxCurrent = 0;
+  mod.payment = 'ExternalPayment';
+  mod.energymode = 'AC_single_phase_core';
+  mod.iso_pwr_ready = false;
 
   mod.uses.simulation_control.call.setSimulationData({value: mod.simdata});
 }
@@ -215,7 +229,25 @@ function car_statemachine(mod) {
   case 'diode_fail':
     drawPower(mod, 0,0,0,0);
     mod.simdata.diode_fail = true;
-    break; 
+    break;
+  case 'iso_power_ready':
+    drawPower(mod, 0,0,0,0);
+    mod.simdata_setting.cp_voltage = 6.; 
+    break;
+  case 'iso_charging_regulated':
+    amps = mod.evse_maxcurrent;
+    if (amps>mod.maxCurrent) amps = mod.maxCurrent;
+
+    mod.simdata_setting.cp_voltage = 6.; 
+    if (mod.simulation_feedback.relais_on>0 && mod.numPhases>0) amps1 = amps;
+    else amps1 = 0;
+    if (mod.simulation_feedback.relais_on>1 && mod.numPhases>1) amps2 = amps;
+    else amps2 = 0;
+    if (mod.simulation_feedback.relais_on>2 && mod.numPhases>2) amps3 = amps;
+    else amps3 = 0;
+
+    drawPower(mod,amps1,amps2,amps3,0.2);
+    break;
   default:
     mod.state = 'unplugged';
     break;
@@ -302,7 +334,11 @@ function parseSimCommands(mod, str) {
     cmd = cmd.replace(/,/g,' ').split(' ');
     let cmdname = cmd.shift();
     let args = [];
-    for (a of cmd) {args.push(parseFloat(a));}
+    for (a of cmd) {
+      if (isNaN(a)) args.push(a);
+      else args.push(parseFloat(a));
+    }
+
     let c = mod.registeredCmds[cmdname];
     if (c===undefined || args.length != c.numargs) {
       // Ignoreing unknown command / command with wrong parameter count
@@ -324,68 +360,148 @@ function registerAllCmds(mod) {
     return true;
    });
 
-   registerCmd (mod, 'sleep', 1, (mod, c) => {
+  registerCmd (mod, 'sleep', 1, (mod, c) => {
     if (c.timeLeft === undefined) c.timeLeft = c.args[0]*4+1;
     return (!(c.timeLeft-->0)); 
-   });
+  });
 
-   registerCmd (mod, 'iec_wait_pwr_ready', 0, (mod, c) => {
+  registerCmd (mod, 'iec_wait_pwr_ready', 0, (mod, c) => {
     mod.state = 'pluggedin';
     if (mod.simulation_feedback===undefined) return false;
     if (mod.simulation_feedback.evse_pwm_running && dutyCycleToAmps(mod.simulation_feedback.pwm_duty_cycle)>0) return true;
     else return false;
-   });
+  });
 
-   registerCmd (mod, 'iso_wait_pwr_ready', 0, (mod, c) => {
+  registerCmd (mod, 'iso_wait_pwr_ready', 0, (mod, c) => {
     mod.state = 'pluggedin';
     if (mod.simulation_feedback===undefined) return false;
     if (mod.simulation_feedback.evse_pwm_running && mod.simulation_feedback.pwm_duty_cycle>0.04 && mod.simulation_feedback.pwm_duty_cycle<0.06) return true;
     else return false;
-   });
+  });
 
-   registerCmd (mod, 'draw_power_regulated', 2, (mod, c) => {
+  registerCmd (mod, 'draw_power_regulated', 2, (mod, c) => {
     mod.maxCurrent = c.args[0];
     mod.numPhases = c.args[1];
     mod.state = 'charging_regulated';
     return true;
-   });
+  });
 
-   registerCmd (mod, 'draw_power_fixed', 2, (mod, c) => {
+  registerCmd (mod, 'draw_power_fixed', 2, (mod, c) => {
     mod.maxCurrent = c.args[0];
     mod.numPhases = c.args[1];
     mod.state = 'charging_fixed';
     return true;
-   });
+  });
 
-   registerCmd (mod, 'pause', 0, (mod, c) => {
+  registerCmd (mod, 'pause', 0, (mod, c) => {
     mod.state = 'pluggedin';
     return true;
-   });
+  });
 
-   registerCmd (mod, 'unplug', 0, (mod, c) => {
+  registerCmd (mod, 'unplug', 0, (mod, c) => {
     mod.state = 'unplugged';
     return true;
-   });
+  });
 
-   registerCmd (mod, 'error_e', 0, (mod, c) => {
+  registerCmd (mod, 'error_e', 0, (mod, c) => {
     mod.state = 'error_e';
     return true;
-   });
+  });
 
-   registerCmd (mod, 'diode_fail', 0, (mod, c) => {
+  registerCmd (mod, 'diode_fail', 0, (mod, c) => {
     mod.state = 'diode_fail';
     return true;
-   });
+  });
 
-   registerCmd (mod, 'rcd_current', 1, (mod, c) => {
+  registerCmd (mod, 'rcd_current', 1, (mod, c) => {
     mod.simdata_setting.rcd_current = c.args[0];
     return true;
-   });
+  });
 
-   registerCmd (mod, 'pp_resistor', 1, (mod, c) => {
+  registerCmd (mod, 'pp_resistor', 1, (mod, c) => {
     mod.simdata_setting.pp_resistor = c.args[0];
     return true;
-   });
+  });
+
+  registerCmd (mod, 'iso_start_slac_session', 0, (mod, c) => {
+    mod.state = 'pluggedin';
+    if (mod.simulation_feedback===undefined) return false;
+    if (mod.simulation_feedback.evse_pwm_running === true) return true;
+
+  })
+
+  registerCmd (mod, 'iso_start_v2g_session', 2, (mod, c) => {
+    
+    if (c.args[0] === 'externalpayment') mod.payment = 'ExternalPayment';
+    else if (c.args[0] === "contract") mod.payment = 'Contract';
+    else return false;
+
+    switch (c.args[1]) {
+      case 'ac_single_phase_core': mod.energymode = 'AC_single_phase_core'; break;
+      case 'ac_three_phase_core': mod.energymode = 'AC_three_phase_core'; break;
+      case 'dc_core': mod.energymode = 'DC_core'; break;
+      case 'dc_extended': mod.energymode = 'DC_extended'; break;
+      case 'dc_combo_core': mod.energymode = 'DC_combo_core'; break;
+      case 'dc_unique': mod.energymode = 'DC_unique'; break;
+      default: return false;
+    }
+    // TODO_SL: Check NumPhases with EnergyMode
+
+    args = {PaymentOption:mod.payment, EnergyTransferMode:mod.energymode};
+    
+    if (mod.uses.ev.call.start_charging(args) === true) {
+      return true;
+    } else {
+      return false; // TODO:SL: Bleibt ewig in einer Schleife hängen, weil es nicht weiter geht
+    }
+  });
+
+  registerCmd (mod, 'iso_wait_pwr_ready', 0, (mod,c) => {
+    if (mod.iso_pwr_ready == true) {
+      mod.state = 'iso_power_ready';
+      return true;
+    } else {
+      return false;
+    }
+  });
+
+  registerCmd (mod, 'iso_draw_power_regulated', 2, (mod, c) => {
+    mod.maxCurrent = c.args[0];
+    mod.numPhases = c.args[1];
+    mod.state = 'iso_charging_regulated';
+    return true;
+  });
+
+  registerCmd (mod, 'iso_stop_charging', 0, (mod,c) => {
+    mod.uses.ev.call.stop_charging();
+    mod.state = 'pluggedin';
+    return true;
+  });
+
+  registerCmd (mod, 'iso_wait_for_stop', 1, (mod,c) => {
+    if (c.timeLeft === undefined) {
+      c.timeLeft = c.args[0]*4+1;   // First time set the timer
+    }
+    if (!(c.timeLeft-- > 0)) {
+      mod.uses.ev.call.stop_charging();
+      mod.state = 'pluggedin';
+      return true;
+    }
+    if (mod.iso_stopped === true) {
+      mod.state = 'pluggedin';
+      return true;
+    } else {
+      return false;
+    }
+  })
+
+  registerCmd (mod, 'iso_wait_v2g_session_stopped', 0, (mod, c) => {
+    if (mod.v2g_finished === true) {
+      return true;
+    } else {
+      return false;
+    }
+  });
 }
 
 function registerCmd(mod, name, numargs, execfunction) {

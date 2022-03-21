@@ -9,6 +9,9 @@
     "requires": {
         "simulation_control": {
 			"interface": "yeti_simulation_control"
+		},
+		"ev": {
+			"interface": "ISO15118_ev"
 		}
     },
 	"enable_external_mqtt": true,

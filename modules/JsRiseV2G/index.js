@@ -83,29 +83,17 @@ boot_module(async ({
     evlog.debug(`raw data: ${raw_data}`);
     const data = JSON.parse(raw_data);
     evlog.debug(`stringified data: ${data}`);
-    if (data.impl_id === 'ac_charger') mod.provides.ac_charger.publish[data.var](data.val);
-    else if (data.impl_id === 'dc_charger') mod.provides.dc_charger.publish[data.var](data.val);
+    if (data.impl_id === 'charger') mod.provides.charger.publish[data.var](data.val);
     else {
       evlog.error(`Java RiseV2G tried to access unknown implementation with id ${data.impl_id}, ignoring!`);
     }
   });
 
-  Object.keys(setup.provides.ac_charger.register).forEach((key) => {
-    evlog.debug(`Providing cmd '${key}' on 'ac_charger' implementation ...`);
-    setup.provides.ac_charger.register[key]((mod, arg) => {
+  Object.keys(setup.provides.charger.register).forEach((key) => {
+    evlog.debug(`Providing cmd '${key}' on 'charger' implementation ...`);
+    setup.provides.charger.register[key]((mod, arg) => {
       mod.mqtt.publish(mqtt_paths.cmds, JSON.stringify({
-        impl_id: 'ac_charger',
-        cmd: key,
-        args: arg,
-      }));
-    });
-  });
-
-  Object.keys(setup.provides.dc_charger.register).forEach((key) => {
-    evlog.debug(`Providing cmd '${key}' on 'dc_charger' implementation ...`);
-    setup.provides.dc_charger.register[key]((mod, arg) => {
-      mod.mqtt.publish(mqtt_paths.cmds, JSON.stringify({
-        impl_id: 'dc_charger',
+        impl_id: 'charger',
         cmd: key,
         args: arg,
       }));

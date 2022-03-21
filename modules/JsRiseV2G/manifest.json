@@ -12,13 +12,9 @@
                 }
 			}
 		},
-        "ac_charger": {
-			"interface": "ISO15118_ac_charger",
-			"description": "This module implements the ISO15118-2 implementation of an AC charger"
-		},
-        "dc_charger": {
-			"interface": "ISO15118_dc_charger",
-			"description": "This module implements the ISO15118-2 implementation of a DC charger"
+        "charger": {
+			"interface": "ISO15118_charger",
+			"description": "This module implements the ISO15118-2 implementation of an AC or DC charger"
 		}
 	},
 	"enable_external_mqtt": true,
