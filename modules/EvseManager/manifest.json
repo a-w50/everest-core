@@ -25,6 +25,10 @@
 			"description": "User configurable current limit for this EVSE",
 			"type": "number",
 			"default": 32
+		},
+		"evse_id": {
+			"description": "EVSE ID including the connector number, e.g. DE*PNX*E123456*1",
+			"type": "string"
 		}
 	},
 	"provides": {

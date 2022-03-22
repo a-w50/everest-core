@@ -5,9 +5,19 @@
 #include <boost/uuid/random_generator.hpp>
 #include <boost/uuid/uuid.hpp>
 #include <boost/uuid/uuid_io.hpp>
+#include <date/date.h>
 
 namespace module {
 namespace evse {
+
+std::chrono::time_point<std::chrono::system_clock> from_rfc3339(std::string t) {
+    std::istringstream infile{t};
+    std::chrono::time_point<std::chrono::system_clock> tp;
+    infile >> date::parse("%FT%T", tp);
+
+    // std::cout <<"timepoint"<<" "<<t<<" "<< tp.time_since_epoch().count()<<std::endl;
+    return tp;
+}
 
 bool str_to_bool(std::string data) {
     if (data == "true") {
@@ -33,13 +43,16 @@ void evse_managerImpl::init() {
     mod->mqtt.subscribe("/external/cmd/set_auth",
                         [&charger = mod->charger](const std::string data) { charger->Authorize(true, data.c_str()); });
 
-    mod->mqtt.subscribe("/external/cmd/enable", [&charger = mod->charger](const std::string data) { charger->enable(); });
+    mod->mqtt.subscribe("/external/cmd/enable",
+                        [&charger = mod->charger](const std::string data) { charger->enable(); });
 
-    mod->mqtt.subscribe("/external/cmd/disable", [&charger = mod->charger](const std::string data) { charger->disable(); });
+    mod->mqtt.subscribe("/external/cmd/disable",
+                        [&charger = mod->charger](const std::string data) { charger->disable(); });
 
-    mod->mqtt.subscribe(
-        "/external/cmd/switch_three_phases_while_charging",
-        [&charger = mod->charger](const std::string data) { charger->switchThreePhasesWhileCharging(str_to_bool(data)); });
+    mod->mqtt.subscribe("/external/cmd/switch_three_phases_while_charging",
+                        [&charger = mod->charger](const std::string data) {
+                            charger->switchThreePhasesWhileCharging(str_to_bool(data));
+                        });
 
     mod->mqtt.subscribe("/external/cmd/pause_charging",
                         [&charger = mod->charger](const std::string data) { charger->pauseCharging(); });
@@ -47,7 +60,8 @@ void evse_managerImpl::init() {
     mod->mqtt.subscribe("/external/cmd/resume_charging",
                         [&charger = mod->charger](const std::string data) { charger->resumeCharging(); });
 
-    mod->mqtt.subscribe("/external/cmd/restart", [&charger = mod->charger](const std::string data) { charger->restart(); });
+    mod->mqtt.subscribe("/external/cmd/restart",
+                        [&charger = mod->charger](const std::string data) { charger->restart(); });
     // /Deprecated
 
     mod->r_powermeter->subscribe_powermeter([this](const json p) {
@@ -58,6 +72,9 @@ void evse_managerImpl::init() {
 
 void evse_managerImpl::ready() {
 
+    // publish evse id at least once
+    publish_evse_id(mod->config.evse_id);
+
     mod->signalNrOfPhasesAvailable.connect([this](const int n) {
         if (n >= 1 && n <= 3) {
             limits["nr_of_phases_available"] = n;
@@ -66,6 +83,11 @@ void evse_managerImpl::ready() {
     });
 
     mod->r_bsp->subscribe_telemetry([this](json telemetry) { publish_telemetry(telemetry); });
+
+    // The module code generates the reservation events and we merely publish them here
+    mod->signalReservationEvent.connect([this](json j) {
+        publish_session_events(j);
+    });
 
     mod->charger->signalEvent.connect([this](const Charger::EvseEvent& e) {
         json se;
@@ -163,14 +185,13 @@ bool evse_managerImpl::handle_force_unlock() {
     return mod->charger->forceUnlock();
 };
 
-bool evse_managerImpl::handle_reserve_now(std::string& auth_token, double& timeout) {
-    // your code for cmd reserve_now goes here
-    return false;
+std::string evse_managerImpl::handle_reserve_now(int& reservation_id, std::string& auth_token, std::string& expiry_date,
+                                                 std::string& parent_id) {
+    return mod->reserve_now(reservation_id, auth_token, from_rfc3339(expiry_date), parent_id);
 };
 
 bool evse_managerImpl::handle_cancel_reservation() {
-    // your code for cmd cancel_reservation goes here
-    return false;
+    return mod->cancel_reservation();
 };
 
 std::string evse_managerImpl::generate_session_uuid() {
