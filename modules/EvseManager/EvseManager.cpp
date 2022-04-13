@@ -13,6 +13,15 @@ void EvseManager::init() {
     authorization_available = false;
     reserved = false;
     reservation_id = 0;
+
+    reservationThreadHandle = std::thread([this]() {
+        while (true) {
+            // check reservation status on regular intervals to see if it expires.
+            // This will generate the ReservationEnd event.
+            reservation_valid();
+            sleep(1);
+        }
+    });
 }
 
 void EvseManager::ready() {
@@ -109,6 +118,8 @@ std::string EvseManager::reserve_now(const int _reservation_id, const std::strin
     if (reservation_valid() && _reservation_id != reservation_id)
         return "Rejected";
 
+    std::lock_guard<std::mutex> lock(reservation_mutex);
+
     // accept new reservation
     reserved_auth_token = token;
     reservation_valid_until = valid_until;
@@ -127,22 +138,9 @@ std::string EvseManager::reserve_now(const int _reservation_id, const std::strin
 
     // FIXME TODO:
     /*
-        A reservation SHALL be terminated on the Charge Point when either (1) a transaction is started for the reserved
-    idTag or parent idTag and on the reserved connector or any connector when the reserved connectorId is 0, or (2)
-    when the time specified in expiryDate is reached, or (3) when the Charge Point or connector are set to Faulted or
-    Unavailable.
-
-    When a reservation expires, the Charge Point SHALL terminate the reservation and make the connector
-    available. The Charge Point SHALL send a status notification to notify the Central System that the reserved
-    connector is now available.
-
-    ReservationStart / End events with reason
+    parent_id needs to be implemented in new auth manager arch
 
     reservationEnd with reason Charging Started with it is not implemented yet
-
-    EvseManager: add ID and connector nr
-
-    reservation expiry is not regularly checked to send out event
     */
 }
 
@@ -158,6 +156,7 @@ bool EvseManager::updateLocalMaxCurrentLimit(float max_current) {
 }
 
 bool EvseManager::cancel_reservation() {
+    std::lock_guard<std::mutex> lock(reservation_mutex);
     if (reservation_valid()) {
         reserved = false;
 
@@ -181,6 +180,7 @@ float EvseManager::getLocalMaxCurrentLimit() {
 }
 
 bool EvseManager::reservation_valid() {
+    std::lock_guard<std::mutex> lock(reservation_mutex);
     if (reserved) {
         if (std::chrono::system_clock::now() < reservation_valid_until) {
             // still valid

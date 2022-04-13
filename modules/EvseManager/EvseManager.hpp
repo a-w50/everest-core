@@ -89,13 +89,16 @@ private:
     json hw_capabilities;
     bool local_three_phases;
     float local_max_current_limit;
+
+    // Reservations
     std::string reserved_auth_token;
     std::string reserved_auth_token_parent_id;
     std::chrono::system_clock::time_point reservation_valid_until;
     bool reserved; // internal, use reservation_valid() if you want to find out if it is reserved
     int reservation_id;
-
     bool reservation_valid();
+    Everest::Thread reservationThreadHandle;
+    std::mutex reservation_mutex;
     const float EVSE_ABSOLUTE_MAX_CURRENT=80.0;
     // ev@211cfdbe-f69a-4cd6-a4ec-f8aaa3d1b6c8:v1
 };
