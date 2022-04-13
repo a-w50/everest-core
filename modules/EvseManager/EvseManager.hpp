@@ -97,6 +97,8 @@ private:
     bool reserved; // internal, use reservation_valid() if you want to find out if it is reserved
     int reservation_id;
     bool reservation_valid();
+    void use_reservation_to_start_charging();
+    bool reserved_for_different_token(const std::string& token);
     Everest::Thread reservationThreadHandle;
     std::mutex reservation_mutex;
     const float EVSE_ABSOLUTE_MAX_CURRENT=80.0;

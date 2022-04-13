@@ -65,7 +65,18 @@ void EvseManager::ready() {
         if (authorization_available) {
             boost::variant<boost::blank, std::string> auth = r_auth->call_get_authorization();
             if (auth.which() == 1) {
-                charger->Authorize(true, boost::get<std::string>(auth));
+                const std::string& token = boost::get<std::string>(auth);
+                // we got an auth token, check if it matches our reservation
+                if (reserved_for_different_token(token)) {
+                    // throw an error event that can e.g. be displayed
+                    json se;
+                    se["event"] = "ReservationAuthtokenMismatch";
+                    signalReservationEvent(se);
+                } else {
+                    // if reserved: signal to the outside world that this reservation ended because it is being used
+                    use_reservation_to_start_charging();
+                    charger->Authorize(true, token);
+                }
             }
         }
     });
@@ -175,6 +186,24 @@ bool EvseManager::cancel_reservation() {
     return false;
 }
 
+// Signals that reservation was used to start this charging.
+// Does nothing if no reservation is active.
+void EvseManager::use_reservation_to_start_charging() {
+    std::lock_guard<std::mutex> lock(reservation_mutex);
+    if (!reserved)
+        return;
+
+    // publish event to other modules
+    json se;
+    se["event"] = "ReservationEnd";
+    se["reservation_end"]["reason"] = "UsedToStartCharging";
+    se["reservation_end"]["reservation_id"] = reservation_id;
+
+    signalReservationEvent(se);
+
+    reserved = false;
+}
+
 float EvseManager::getLocalMaxCurrentLimit() {
     return local_max_current_limit;
 }
@@ -199,6 +228,20 @@ bool EvseManager::reservation_valid() {
     }
     // no active reservation
     return false;
+}
+
+/*
+  Returns false if not reserved or reservation matches the token.
+  Returns true if reserved for a different token.
+*/
+bool EvseManager::reserved_for_different_token(const std::string& token) {
+    std::lock_guard<std::mutex> lock(reservation_mutex);
+    if (!reserved)
+        return true;
+    if (reserved_auth_token == token)
+        return true;
+    else
+        return false;
 }
 
 } // namespace module
