@@ -167,8 +167,9 @@ bool EvseManager::updateLocalMaxCurrentLimit(float max_current) {
 }
 
 bool EvseManager::cancel_reservation() {
+    bool res_valid = reservation_valid();
     std::lock_guard<std::mutex> lock(reservation_mutex);
-    if (reservation_valid()) {
+    if (res_valid) {
         reserved = false;
 
         // publish event to other modules
