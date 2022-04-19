@@ -34,7 +34,6 @@ Object auth_token_validatorImpl::handle_validate_token(std::string& token) {
     }
 
     result["reason"] = "Validation by OCPP 1.6 Central System";
-
     return result;
 };
 

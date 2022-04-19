@@ -70,6 +70,12 @@ void evse_managerImpl::init() {
     });
 }
 
+void evse_managerImpl::set_session_uuid() {
+    if (session_uuid.empty()) {
+        session_uuid = generate_session_uuid();
+    }
+}
+
 void evse_managerImpl::ready() {
 
     // publish evse id at least once
@@ -86,6 +92,11 @@ void evse_managerImpl::ready() {
 
     // The module code generates the reservation events and we merely publish them here
     mod->signalReservationEvent.connect([this](json j) {
+        if (j["event"] == "ReservationStart") {
+            set_session_uuid();
+        }
+
+        j["uuid"] = session_uuid;
         publish_session_events(j);
     });
 
@@ -103,7 +114,7 @@ void evse_managerImpl::ready() {
             if (p.contains("energy_Wh_export") && p["energy_Wh_export"].contains("total"))
                 se["session_started"]["energy_Wh_export"] = p["energy_Wh_export"]["total"];
 
-            session_uuid = generate_session_uuid();
+            set_session_uuid();
         }
 
         se["uuid"] = session_uuid;

@@ -237,11 +237,11 @@ bool EvseManager::reservation_valid() {
 bool EvseManager::reserved_for_different_token(const std::string& token) {
     std::lock_guard<std::mutex> lock(reservation_mutex);
     if (!reserved)
-        return true;
-    if (reserved_auth_token == token)
-        return true;
-    else
         return false;
+    if (reserved_auth_token == token)
+        return false;
+    else
+        return true;
 }
 
 } // namespace module

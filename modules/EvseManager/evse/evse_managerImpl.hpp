@@ -32,6 +32,9 @@ public:
     void set_nr_of_phases_available(int n);
     // ev@8ea32d28-373f-4c90-ae5e-b4fcc74e2a61:v1
 
+    void set_session_uuid();
+
+
 protected:
     // command handler functions (virtual)
     virtual bool handle_enable() override;
