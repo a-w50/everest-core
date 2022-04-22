@@ -51,6 +51,7 @@ def client_data():
     cd["enable"] = "/carsim/cmd/enable"
     cd["start-topic"] = "/carsim/cmd/execute_charging_session"
     cd["start-payload"] = "/carsim/cmd/execute_charging_session"
+    cd["ready"] = "/everest/ready"
     return cd
 
 @pytest.fixture
@@ -69,6 +70,10 @@ def everest_data(get_proj_root):
     ed["interfaces"] = ed["dist"] / Path("interfaces")
     return ed
 
+def subscribe_transmitted_signals(cl, client_data):
+    subscribe(cl, topic=client_data["disable"])
+    subscribe(cl, topic=client_data["enable"])
+    subscribe(cl, topic=client_data["start-topic"])
 
 @pytest.fixture
 def client(client_data):
@@ -82,6 +87,9 @@ def client(client_data):
     cl.username_pw_set(client_data["username"], client_data["password"])
     cl.on_connect = on_connect
     cl.connect(client_data["broker"], client_data["port"])
+    subscribe(cl, topic=client_data["ready"])
+    subscribe_transmitted_signals(cl, client_data)
+    cl.loop_start()
     return cl
 
 @pytest.fixture
@@ -89,29 +97,24 @@ def everest_instance(xprocess, get_proj_root, client, everest_data):
     launchpath = get_proj_root / Path("run_sil-ocpp-complete-fixture.sh")
     yield from everest_start(xprocess, launchpath, "i1", client, everest_data)
 
-def subscribe(client: mqtt_client):
-    def on_message(client, userdata, msg):
-        print(f"Received `{msg.payload.decode()}` from `{msg.topic}` topic")
-
-    client.subscribe(topic)
-    client.on_message = on_message
-
 def publish(client, topic, payload=None):
     msg_count = 0
-    while msg_count < 3:
+    status = 1
+    while status == 1:
         result = client.publish(topic=topic, payload=payload)
 
         # result: [0, 1]
         status = result[0]
         if status == 0:
-            print(f"Send `{payload}` to topic `{topic}`")
+            print(f"Send `{payload}` to topic `{topic}`, try `{msg_count}`")
         else:
-            print(f"Failed to send message to topic {topic}")
+            print(f"Failed to send message to topic {topic}, try `{msg_count}`")
+            time.sleep(0.1)
+        
         msg_count += 1
-        time.sleep(1)
 
 
-def subscribe(client: mqtt_client):
+def subscribe(client: mqtt_client, topic):
     def on_message(client, userdata, msg):
         print(f"Received `{msg.payload.decode()}` from `{msg.topic}` topic")
 
@@ -120,12 +123,10 @@ def subscribe(client: mqtt_client):
 
 
 def test_basic(client_data, client, everest_instance):
-    pass
-    """
-    subscribe(client)
-    client.loop_start()
+
     publish(client, topic=client_data["disable"])
+    time.sleep(0.001)
     publish(client, topic=client_data["enable"])
+    time.sleep(1)
     payload = "sleep 1;iec_wait_pwr_ready;sleep 1;draw_power_regulated 16,3;sleep 30;unplug"
     publish(client, topic=client_data["start-topic"], payload=payload)
-    """
