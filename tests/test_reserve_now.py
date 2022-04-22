@@ -14,7 +14,6 @@ def proj_root(cwd=os.getcwd()):
 
 def everest_start(xprocess, launchpath, instance_name, client):
     class Starter(ProcessStarter):
-
         pattern = "Everest started!"
         terminate_on_interrupt = True
 
