@@ -168,6 +168,7 @@ bool EvseManager::updateLocalMaxCurrentLimit(float max_current) {
 
 bool EvseManager::cancel_reservation() {
     bool res_valid = reservation_valid();
+    EVLOG(critical) << "res_valid: " << res_valid;
     std::lock_guard<std::mutex> lock(reservation_mutex);
     if (res_valid) {
         reserved = false;
@@ -184,12 +185,15 @@ bool EvseManager::cancel_reservation() {
     }
 
     reserved = false;
+    EVLOG(critical) << "res_valid: " << res_valid;
     return false;
 }
 
 // Signals that reservation was used to start this charging.
 // Does nothing if no reservation is active.
 void EvseManager::use_reservation_to_start_charging() {
+    EVLOG(critical) << "Reserved: " << reserved;
+
     std::lock_guard<std::mutex> lock(reservation_mutex);
     if (!reserved)
         return;
@@ -203,6 +207,7 @@ void EvseManager::use_reservation_to_start_charging() {
     signalReservationEvent(se);
 
     reserved = false;
+    EVLOG(critical) << "Reserved: " << reserved << "se: " << se;
 }
 
 float EvseManager::getLocalMaxCurrentLimit() {

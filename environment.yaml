@@ -1,0 +1,14 @@
+name: everest-core-testing
+channels:
+- conda-forge
+dependencies:
+  - cmake
+  - ninja
+  - nlohmann_json
+  - yaml-cpp
+  - pytest
+  - pyyaml
+  - pip
+  - pip:
+    - pytest-xprocess
+    - paho-mqtt
