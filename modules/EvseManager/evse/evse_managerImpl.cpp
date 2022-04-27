@@ -10,9 +10,9 @@
 namespace module {
 namespace evse {
 
-std::chrono::time_point<std::chrono::system_clock> from_rfc3339(std::string t) {
+std::chrono::time_point<date::utc_clock> from_rfc3339(std::string t) {
     std::istringstream infile{t};
-    std::chrono::time_point<std::chrono::system_clock> tp;
+    std::chrono::time_point<date::utc_clock> tp;
     infile >> date::parse("%FT%T", tp);
 
     // std::cout <<"timepoint"<<" "<<t<<" "<< tp.time_since_epoch().count()<<std::endl;

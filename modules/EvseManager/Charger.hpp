@@ -122,8 +122,7 @@ public:
         PermanentFault
     };
 
-    enum class ErrorState
-    {
+    enum class ErrorState {
         Error_E,
         Error_DF,
         Error_Relais,
@@ -199,7 +198,7 @@ private:
     void checkSoftOverCurrent();
     float currentDrawnByVehicle[3];
     bool overCurrent;
-    std::chrono::system_clock::time_point lastOverCurrentEvent;
+    std::chrono::time_point<date::utc_clock> lastOverCurrentEvent;
     const int softOverCurrentTimeout = 7000;
 
     ControlPilotEvent string_to_control_pilot_event(std::string event);
@@ -213,8 +212,8 @@ private:
     bool authorized;
     bool cancelled;
 
-    std::chrono::system_clock::time_point lastPwmUpdate;
-
+    std::chrono::time_point<date::utc_clock> lastPwmUpdate;
+    
     float update_pwm_last_dc;
     void update_pwm_now(float dc);
     void update_pwm_max_every_5seconds(float dc);

@@ -58,15 +58,15 @@ private:
     // insert your private definitions here
     std::mutex global_energy_object_mutex;
     json global_energy_object;
-    std::chrono::system_clock::time_point lastLimitUpdate;
+    std::chrono::time_point<date::utc_clock> lastLimitUpdate;
 
     static void interval_start(const std::function<void(void)>& func, unsigned int interval_ms);
     void run_enforce_limits();
-    static Array run_optimizer(json energy_object);
-    static void optimize_one_level(json& energy_object, json& results,
-                                   const std::chrono::system_clock::time_point timepoint, const json price_schedule);
+    Array run_optimizer(json energy);
+    void optimize_one_level(json& energy, Array& results, const std::chrono::time_point<date::utc_clock> timepoint);
+    void sanitize_object(json& obj_to_sanitize);
+
     static json get_sub_element_from_schedule_at_time(json s, const std::chrono::system_clock::time_point timepoint);
-    static void sanitize_object(json& obj_to_sanitize);
     static double get_current_limit_from_energy_object(const json& limit_object, const json& energy_object);
     static double get_currently_valid_price_per_kwh(json& energy_object,
                                                     const std::chrono::system_clock::time_point timepoint_now);

@@ -84,7 +84,7 @@ class evSerial {
 
     bool serial_timed_out();
     void timeoutDetectionThread();
-    std::chrono::system_clock::time_point last_keep_alive_lo_timestamp;
+    std::chrono::time_point<date::utc_clock> last_keep_alive_lo_timestamp;
 };
 
 #endif

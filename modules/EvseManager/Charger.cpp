@@ -15,7 +15,6 @@
 
 #include "Charger.hpp"
 
-#include <chrono>
 #include <math.h>
 #include <string.h>
 
@@ -339,7 +338,7 @@ void Charger::processCPEventsIndependent(ControlPilotEvent cp_event) {
 
 void Charger::update_pwm_max_every_5seconds(float dc) {
     if (dc != update_pwm_last_dc) {
-        auto now = std::chrono::system_clock::now();
+        auto now = date::utc_clock::now();
         auto timeSinceLastUpdate = std::chrono::duration_cast<std::chrono::milliseconds>(now - lastPwmUpdate).count();
         if (timeSinceLastUpdate >= 5000)
             update_pwm_now(dc);
@@ -349,7 +348,7 @@ void Charger::update_pwm_max_every_5seconds(float dc) {
 void Charger::update_pwm_now(float dc) {
     update_pwm_last_dc = dc;
     r_bsp->call_pwm_on(dc);
-    lastPwmUpdate = std::chrono::system_clock::now();
+    lastPwmUpdate = date::utc_clock::now();
 }
 
 void Charger::ISO_IEC_Coordination() {
@@ -763,12 +762,12 @@ void Charger::checkSoftOverCurrent() {
         if (!overCurrent) {
             overCurrent = true;
             // timestamp when over current happend first
-            lastOverCurrentEvent = std::chrono::system_clock::now();
+            lastOverCurrentEvent = date::utc_clock::now();
         }
     } else
         overCurrent = false;
 
-    auto now = std::chrono::system_clock::now();
+    auto now = date::utc_clock::now();
     auto timeSinceOverCurrentStarted =
         std::chrono::duration_cast<std::chrono::milliseconds>(now - lastOverCurrentEvent).count();
     if (overCurrent && timeSinceOverCurrentStarted >= softOverCurrentTimeout) {

@@ -4,6 +4,8 @@
 #define EVSE_FSM_HPP
 
 #include <chrono>
+#include <date/date.h>
+#include <date/tz.h>
 #include <string>
 
 #include <fsm/sync.hpp>
@@ -69,7 +71,7 @@ struct MatchingSessionContext {
     int captured_sounds{0};
     int captured_aags[slac::defs::AAG_LIST_LEN];
     bool received_mnbc_sound{false};
-    std::chrono::time_point<std::chrono::system_clock> tp_sound_start;
+    std::chrono::time_point<date::utc_clock> tp_sound_start;
 
     bool received_match_req{false};
 

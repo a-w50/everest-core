@@ -1,7 +1,6 @@
 // SPDX-License-Identifier: Apache-2.0
 // Copyright 2022 - 2022 Pionix GmbH and Contributors to EVerest
 #include "EnergyManager.hpp"
-#include <chrono>
 
 namespace module {
 
@@ -11,9 +10,9 @@ std::string to_rfc3339(std::chrono::time_point<date::utc_clock> t) {
     return date::format("%FT%TZ", std::chrono::time_point_cast<std::chrono::milliseconds>(t));
 }
 
-std::chrono::time_point<std::chrono::system_clock> from_rfc3339(std::string t) {
+std::chrono::time_point<date::utc_clock> from_rfc3339(std::string t) {
     std::istringstream infile{t};
-    std::chrono::time_point<std::chrono::system_clock> tp;
+    std::chrono::time_point<date::utc_clock> tp;
     infile >> date::parse("%FT%T", tp);
 
     return tp;
@@ -21,7 +20,8 @@ std::chrono::time_point<std::chrono::system_clock> from_rfc3339(std::string t) {
 
 void EnergyManager::init() {
     invoke_init(*p_main);
-    
+    lastLimitUpdate = date::utc_clock::now();
+
     r_energy_trunk->subscribe_energy([this](json e) {
         // Received new energy object from a child.
         {
@@ -99,7 +99,7 @@ Array EnergyManager::run_optimizer(json energy) {
 
 // recursive optimization of one level
 void EnergyManager::optimize_one_level(json& energy, json& optimized_values,
-                                       const std::chrono::system_clock::time_point timepoint_now,
+                                       const std::chrono::time_point<date::utc_clock> timepoint_now,
                                        const json price_schedule) {
 
     // find max_current limit for this level
@@ -175,7 +175,7 @@ void EnergyManager::optimize_one_level(json& energy, json& optimized_values,
 }
 
 json EnergyManager::get_sub_element_from_schedule_at_time(json s,
-                                                          const std::chrono::system_clock::time_point timepoint) {
+                                                          const std::chrono::time_point<date::utc_clock> timepoint) {
     // first entry is valid now per agreement
     json ret = s[0];
     // walk through schedule to find a better fit
@@ -241,6 +241,7 @@ double EnergyManager::get_current_limit_from_energy_object(const json& limit_obj
 
     return max_current_A;
 }
+
 
 double EnergyManager::get_currently_valid_price_per_kwh(json& energy_object,
                                                         const std::chrono::system_clock::time_point timepoint_now) {
