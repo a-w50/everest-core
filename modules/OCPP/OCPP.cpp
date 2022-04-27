@@ -106,7 +106,7 @@ void OCPP::init() {
                 // TODO(kai): decide if we need to inform libocpp about such an event
             } else if (event == "SessionStarted") {
                 auto session_started = session_events["session_started"];
-                auto timestamp = ocpp1_6::DateTime(std::chrono::time_point<date::utc_clock>(
+                auto timestamp = ocpp1_6::DateTime(std::chrono::system_clock::time_point(
                     std::chrono::seconds(session_started["timestamp"].get<int>())));
                 auto energy_Wh_import = session_started["energy_Wh_import"].get<double>();
                 this->charge_point->start_session(connector, timestamp, energy_Wh_import);
@@ -120,7 +120,7 @@ void OCPP::init() {
                 this->charge_point->resume_charging(connector);
             } else if (event == "SessionFinished") {
                 auto session_finished = session_events["session_finished"];
-                auto timestamp = std::chrono::time_point<date::utc_clock>(
+                auto timestamp = std::chrono::system_clock::time_point(
                     std::chrono::seconds(session_finished["timestamp"].get<int>()));
                 auto energy_Wh_import = session_finished["energy_Wh_import"].get<double>();
                 this->charge_point->stop_session(connector, ocpp1_6::DateTime(timestamp), energy_Wh_import);

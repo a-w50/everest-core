@@ -56,6 +56,7 @@ private:
 
     // ev@211cfdbe-f69a-4cd6-a4ec-f8aaa3d1b6c8:v1
     // insert your private definitions here
+<<<<<<< HEAD
     std::mutex global_energy_object_mutex;
     json global_energy_object;
     std::chrono::time_point<date::utc_clock> lastLimitUpdate;
@@ -64,6 +65,12 @@ private:
     void run_enforce_limits();
     Array run_optimizer(json energy);
     void optimize_one_level(json& energy, Array& results, const std::chrono::time_point<date::utc_clock> timepoint);
+=======
+    std::chrono::system_clock::time_point lastLimitUpdate;
+    Array run_optimizer(json energy);
+    void optimize_one_level(json& energy, Array& results, const std::chrono::time_point<date::utc_clock> timepoint);
+    json get_limit_from_schedule(json s, const std::chrono::system_clock::time_point timepoint);
+>>>>>>> added target_link_libraries to CMakeLists and reverted all std::chrono::system_clock::time_point to assess them individually
     void sanitize_object(json& obj_to_sanitize);
 
     static json get_sub_element_from_schedule_at_time(json s, const std::chrono::system_clock::time_point timepoint);

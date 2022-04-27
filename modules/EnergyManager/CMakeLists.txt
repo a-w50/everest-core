@@ -54,7 +54,6 @@ install(FILES manifest.json
     DESTINATION ${ENERGYMANAGER_DEST}
 )
 
-# Insert in the module, additional part of the module (evsemanager)
 target_link_libraries(${MOD_MODULE_NAME}
     PRIVATE
         date::date

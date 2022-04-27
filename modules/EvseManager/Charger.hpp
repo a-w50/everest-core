@@ -198,7 +198,7 @@ private:
     void checkSoftOverCurrent();
     float currentDrawnByVehicle[3];
     bool overCurrent;
-    std::chrono::time_point<date::utc_clock> lastOverCurrentEvent;
+    std::chrono::system_clock::time_point lastOverCurrentEvent;
     const int softOverCurrentTimeout = 7000;
 
     ControlPilotEvent string_to_control_pilot_event(std::string event);
@@ -212,7 +212,7 @@ private:
     bool authorized;
     bool cancelled;
 
-    std::chrono::time_point<date::utc_clock> lastPwmUpdate;
+    std::chrono::system_clock::time_point lastPwmUpdate;
     
     float update_pwm_last_dc;
     void update_pwm_now(float dc);

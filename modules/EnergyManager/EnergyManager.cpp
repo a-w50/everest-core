@@ -98,10 +98,15 @@ Array EnergyManager::run_optimizer(json energy) {
 }
 
 // recursive optimization of one level
+<<<<<<< HEAD
 void EnergyManager::optimize_one_level(json& energy, json& optimized_values,
                                        const std::chrono::time_point<date::utc_clock> timepoint_now,
                                        const json price_schedule) {
 
+=======
+void EnergyManager::optimize_one_level(json& energy, Array& results,
+                                       const std::chrono::system_clock::time_point timepoint) {
+>>>>>>> added target_link_libraries to CMakeLists and reverted all std::chrono::system_clock::time_point to assess them individually
     // find max_current limit for this level
     // min of (limit_from_parent, local_limit_from_schedule)
     if (energy.contains("schedule_import") && !energy["schedule_import"].is_null() ) {  // need "[]" to prevent nlohmann error 304: cannot use at() with null
@@ -174,8 +179,12 @@ void EnergyManager::optimize_one_level(json& energy, json& optimized_values,
     }
 }
 
+<<<<<<< HEAD
 json EnergyManager::get_sub_element_from_schedule_at_time(json s,
                                                           const std::chrono::time_point<date::utc_clock> timepoint) {
+=======
+json EnergyManager::get_limit_from_schedule(json s, const std::chrono::system_clock::time_point timepoint) {
+>>>>>>> added target_link_libraries to CMakeLists and reverted all std::chrono::system_clock::time_point to assess them individually
     // first entry is valid now per agreement
     json ret = s[0];
     // walk through schedule to find a better fit
