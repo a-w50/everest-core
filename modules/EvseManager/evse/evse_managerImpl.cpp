@@ -5,7 +5,7 @@
 #include <boost/uuid/random_generator.hpp>
 #include <boost/uuid/uuid.hpp>
 #include <boost/uuid/uuid_io.hpp>
-#include <date/date.h>
+
 
 namespace module {
 namespace evse {
@@ -16,6 +16,21 @@ std::chrono::time_point<std::chrono::system_clock> from_rfc3339(std::string t) {
     infile >> date::parse("%FT%T", tp);
 
     // std::cout <<"timepoint"<<" "<<t<<" "<< tp.time_since_epoch().count()<<std::endl;
+    // auto tme = std::chrono::system_clock::to_time_t(tp);
+    // EVLOG(critical) << "rfc untillast: " << std::ctime(&tme);
+    return tp;
+}
+
+std::chrono::time_point<date::utc_clock> from_rfc3339_2(std::string t) {
+    std::istringstream infile{t};
+    std::chrono::time_point<date::utc_clock> tp;
+    infile >> date::parse("%FT%T", tp);
+
+    // std::cout <<"timepoint"<<" "<<t<<" "<< tp.time_since_epoch().count()<<std::endl;
+    EVLOG(critical) << "\n\n\nstring: " << t;
+    EVLOG(critical) << "utc_clock: " << tp;
+    // auto tme = std::chrono::system_clock::to_time_t(tp);
+    // EVLOG(critical) << "rfc untillast: " << std::ctime(&tme); // Expecting CET time - 10
     return tp;
 }
 
@@ -196,9 +211,12 @@ bool evse_managerImpl::handle_force_unlock() {
     return mod->charger->forceUnlock();
 };
 
+
 std::string evse_managerImpl::handle_reserve_now(int& reservation_id, std::string& auth_token, std::string& expiry_date,
                                                  std::string& parent_id) {
-    return mod->reserve_now(reservation_id, auth_token, from_rfc3339(expiry_date), parent_id);
+
+    // return mod->reserve_now(reservation_id, auth_token, from_rfc3339(expiry_date), parent_id);
+    return mod->reserve_now(reservation_id, auth_token, from_rfc3339_2(expiry_date), parent_id);
 };
 
 bool evse_managerImpl::handle_cancel_reservation() {

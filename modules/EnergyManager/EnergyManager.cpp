@@ -2,13 +2,12 @@
 // Copyright 2022 - 2022 Pionix GmbH and Contributors to EVerest
 #include "EnergyManager.hpp"
 #include <chrono>
-#include <date/date.h>
 
 namespace module {
 
 #define INVALID_PRICE_PER_KWH (-1.1f)
 
-std::string to_rfc3339(std::chrono::time_point<std::chrono::system_clock> t) {
+std::string to_rfc3339(std::chrono::time_point<date::utc_clock> t) {
     return date::format("%FT%TZ", std::chrono::time_point_cast<std::chrono::milliseconds>(t));
 }
 
@@ -149,7 +148,7 @@ void EnergyManager::optimize_one_level(json& energy, json& optimized_values,
         try {
             if (energy.at("node_type") == "Evse") {
                 json limits_import;
-                limits_import["valid_until"] = to_rfc3339(std::chrono::system_clock::now() + std::chrono::seconds(10));
+                limits_import["valid_until"] = to_rfc3339(date::utc_clock::now() + std::chrono::seconds(10));
                 limits_import["request_parameters"] = json::object();
                 limits_import["request_parameters"]["ac_current_A"] = json::object();
                 limits_import["request_parameters"]["ac_current_A"]["current_A"] = max_current_for_next_level_A;

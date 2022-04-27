@@ -83,8 +83,9 @@ void EvseManager::ready() {
 
     // Cancel reservations if charger is disabled or faulted
     charger->signalEvent.connect([this](Charger::EvseEvent s) {
-        if (s == Charger::EvseEvent::Disabled || s == Charger::EvseEvent::PermanentFault)
+        if (s == Charger::EvseEvent::Disabled || s == Charger::EvseEvent::PermanentFault) {
             cancel_reservation();
+        }
     });
 
     invoke_ready(*p_evse);
@@ -92,7 +93,7 @@ void EvseManager::ready() {
 
     charger->setup(local_three_phases, config.has_ventilation, config.country_code, config.rcd_enabled);
     //  start with a limit of 0 amps. We will get a budget from EnergyManager that is locally limited by hw caps.
-    charger->setMaxCurrent(0.0F, std::chrono::system_clock::now());
+    charger->setMaxCurrent(0.0F, date::utc_clock::now());
     charger->run();
     charger->enable();
 }
@@ -106,7 +107,7 @@ json EvseManager::get_hw_capabilities() {
 }
 
 std::string EvseManager::reserve_now(const int _reservation_id, const std::string& token,
-                                     const std::chrono::system_clock::time_point& valid_until,
+                                     const std::chrono::time_point<date::utc_clock>& valid_until,
                                      const std::string& parent_id) {
 
     // is the evse Unavailable?
@@ -118,7 +119,7 @@ std::string EvseManager::reserve_now(const int _reservation_id, const std::strin
         return "Faulted";
 
     // is the reservation still valid in time?
-    if (std::chrono::system_clock::now() > valid_until)
+    if (date::utc_clock::now() > valid_until)
         return "Rejected";
 
     // is the connector currently ready to accept a new car?
@@ -168,7 +169,10 @@ bool EvseManager::updateLocalMaxCurrentLimit(float max_current) {
 
 bool EvseManager::cancel_reservation() {
     bool res_valid = reservation_valid();
-    EVLOG(critical) << "res_valid: " << res_valid;
+    #ifndef NDEBUG
+        EVLOG(critical) << "res_valid: " << res_valid;
+    #endif
+
     std::lock_guard<std::mutex> lock(reservation_mutex);
     if (res_valid) {
         reserved = false;
@@ -185,14 +189,18 @@ bool EvseManager::cancel_reservation() {
     }
 
     reserved = false;
-    EVLOG(critical) << "res_valid: " << res_valid;
+    #ifndef NDEBUG
+        EVLOG(critical) << "res_valid: " << res_valid;
+    #endif
     return false;
 }
 
 // Signals that reservation was used to start this charging.
 // Does nothing if no reservation is active.
 void EvseManager::use_reservation_to_start_charging() {
-    EVLOG(critical) << "Reserved: " << reserved;
+    #ifndef NDEBUG
+        EVLOG(critical) << "Reserved: " << reserved;
+    #endif
 
     std::lock_guard<std::mutex> lock(reservation_mutex);
     if (!reserved)
@@ -207,7 +215,9 @@ void EvseManager::use_reservation_to_start_charging() {
     signalReservationEvent(se);
 
     reserved = false;
-    EVLOG(critical) << "Reserved: " << reserved << "se: " << se;
+    #ifndef NDEBUG
+        EVLOG(critical) << "Reserved: " << reserved << "se: " << se;
+    #endif
 }
 
 float EvseManager::getLocalMaxCurrentLimit() {
@@ -217,7 +227,7 @@ float EvseManager::getLocalMaxCurrentLimit() {
 bool EvseManager::reservation_valid() {
     std::lock_guard<std::mutex> lock(reservation_mutex);
     if (reserved) {
-        if (std::chrono::system_clock::now() < reservation_valid_until) {
+        if (date::utc_clock::now() < reservation_valid_until) {
             // still valid
             return true;
         } else {

@@ -130,3 +130,5 @@ def test_basic(client_data, client, everest_instance):
     time.sleep(1)
     payload = "sleep 1;iec_wait_pwr_ready;sleep 1;draw_power_regulated 16,3;sleep 30;unplug"
     publish(client, topic=client_data["start-topic"], payload=payload)
+    # pybind11, expose: publish & call
+    # API 

@@ -30,6 +30,8 @@
 #include <mutex>
 #include <queue>
 #include <sigslot/signal.hpp>
+#include <date/date.h>
+#include <date/tz.h>
 
 namespace module {
 
@@ -64,7 +66,7 @@ public:
     //
 
     // external input to charger: update max_current and new validUntil
-    bool setMaxCurrent(float ampere, std::chrono::time_point<std::chrono::system_clock> validUntil);
+    bool setMaxCurrent(float ampere, std::chrono::time_point<date::utc_clock> validUntil);
     // update only max_current but keep the current validUntil
     bool setMaxCurrent(float ampere);
     float getMaxCurrent();
@@ -178,7 +180,7 @@ private:
     void mainThread();
 
     float maxCurrent;
-    std::chrono::time_point<std::chrono::system_clock> maxCurrentValidUntil;
+    std::chrono::time_point<date::utc_clock> maxCurrentValidUntil;
 
     bool powerAvailable();
 

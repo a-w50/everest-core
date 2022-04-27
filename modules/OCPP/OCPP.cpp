@@ -66,6 +66,7 @@ void OCPP::init() {
                 std::string response = this->r_evse_manager.at(connector - 1)
                                            ->call_reserve_now(reservation_id, idTag.get(), expiryDate.to_rfc3339(),
                                                               parent_id.value_or(std::string("")));
+                EVLOG(critical) << response;
                 return this->ResStatMap.at(response);
             } else {
                 return ocpp1_6::ReservationStatus::Unavailable;

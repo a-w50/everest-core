@@ -26,7 +26,7 @@ void energyImpl::init() {
     {
        std::lock_guard<std::mutex> lock(this->energy_mutex);
        json schedule_entry;
-       schedule_entry["timestamp"] = to_rfc3339(std::chrono::system_clock::now());
+       schedule_entry["timestamp"] = to_rfc3339(date::utc_clock::now());
        schedule_entry["request_parameters"] = json::object();
        schedule_entry["request_parameters"]["limit_type"] = "Hard";
        schedule_entry["request_parameters"]["ac_current_A"] = json::object();

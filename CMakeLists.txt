@@ -116,3 +116,5 @@ add_subdirectory(modules)
 install(DIRECTORY "interfaces/" DESTINATION interfaces
         FILES_MATCHING PATTERN "*.json"
 )
+
+find_package(date CONFIG REQUIRED)

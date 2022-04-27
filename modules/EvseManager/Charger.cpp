@@ -487,13 +487,13 @@ float Charger::ampereToDutyCycle(float ampere) {
     return dc;
 }
 
-bool Charger::setMaxCurrent(float c, std::chrono::time_point<std::chrono::system_clock> validUntil) {
+bool Charger::setMaxCurrent(float c, std::chrono::time_point<date::utc_clock> validUntil) {
     if (c >= 0.0 && c <= CHARGER_ABSOLUTE_MAX_CURRENT) {
         std::lock_guard<std::recursive_mutex> lock(configMutex);
         // FIXME: limit to cable limit (PP reading) if that is smaller!
         // is it still valid?
         // FIXME this requires local clock to be UTC
-        if (validUntil > std::chrono::system_clock::now()) {
+        if (validUntil > date::utc_clock::now()) {
             maxCurrent = c;
             maxCurrentValidUntil = validUntil;
             signalMaxCurrent(c);
@@ -509,7 +509,7 @@ bool Charger::setMaxCurrent(float c) {
         // FIXME: limit to cable limit (PP reading) if that is smaller!
         // is it still valid?
         // FIXME this requires local clock to be UTC
-        if (maxCurrentValidUntil > std::chrono::system_clock::now()) {
+        if (maxCurrentValidUntil > date::utc_clock::now()) {
             maxCurrent = c;
             signalMaxCurrent(c);
             return true;
@@ -780,7 +780,7 @@ void Charger::checkSoftOverCurrent() {
 // returns whether power is actually available from EnergyManager
 // i.e. maxCurrent is in valid range
 bool Charger::powerAvailable() {
-    if (maxCurrentValidUntil < std::chrono::system_clock::now()) {
+    if (maxCurrentValidUntil < date::utc_clock::now()) {
         maxCurrent = 0.;
         signalMaxCurrent(maxCurrent);
     }

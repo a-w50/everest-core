@@ -18,6 +18,11 @@
 #include <generated/auth/Interface.hpp>
 #include <generated/board_support_AC/Interface.hpp>
 #include <generated/powermeter/Interface.hpp>
+#include <chrono>
+#include <iostream>
+#include <ctime>
+#include <date/date.h>
+#include <date/tz.h>
 
 // ev@4bf81b14-a215-475c-a1d3-0a484ae48918:v1
 #include "Charger.hpp"
@@ -67,7 +72,7 @@ public:
     bool updateLocalMaxCurrentLimit(float max_current);
     float getLocalMaxCurrentLimit();
     std::string reserve_now(const int _reservation_id, const std::string& token,
-                            const std::chrono::system_clock::time_point& valid_until, const std::string& parent_id);
+                            const std::chrono::time_point<date::utc_clock>& valid_until, const std::string& parent_id);
     bool cancel_reservation();
     sigslot::signal<json> signalReservationEvent;
     // ev@1fce4c5e-0ab8-41bb-90f7-14277703d2ac:v1
@@ -93,7 +98,8 @@ private:
     // Reservations
     std::string reserved_auth_token;
     std::string reserved_auth_token_parent_id;
-    std::chrono::system_clock::time_point reservation_valid_until;
+    // std::chrono::system_clock::time_point reservation_valid_until;
+    std::chrono::time_point<date::utc_clock> reservation_valid_until;
     bool reserved; // internal, use reservation_valid() if you want to find out if it is reserved
     int reservation_id;
     bool reservation_valid();
