@@ -54,7 +54,7 @@ install(FILES manifest.json
     DESTINATION ${ENERGYMANAGER_DEST}
 )
 
-target_link_libraries(${MOD_MODULE_NAME}
+target_link_libraries(${MODULE_NAME}
     PRIVATE
         date::date
         date::date-tz
