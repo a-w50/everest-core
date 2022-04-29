@@ -49,11 +49,6 @@ public:
 
     // ev@8ea32d28-373f-4c90-ae5e-b4fcc74e2a61:v1
     void run_meter_loop();
-
-    uint32_t read_power_in();
-    uint32_t read_power_out();
-    uint32_t read_energy_in();
-    uint32_t read_energy_out();
     // ev@8ea32d28-373f-4c90-ae5e-b4fcc74e2a61:v1
 
 protected:
@@ -74,9 +69,6 @@ private:
     // ev@3370e4dd-95f4-47a9-aaec-ea76f34a66c9:v1
     void init_modbus_client();
     Everest::Thread meter_loop_thread;
-
-    std::unique_ptr<everest::connection::TCPConnection> tcp_conn;
-    std::unique_ptr<everest::modbus::ModbusTCPClient> modbus_client;
     // ev@3370e4dd-95f4-47a9-aaec-ea76f34a66c9:v1
 };
 
