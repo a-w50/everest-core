@@ -37,8 +37,10 @@ void powermeterImpl::run_meter_loop() {
         j["energy_Wh_export"]["total"] = energy_out;
 
         j["power_W"]["total"] = power_in-power_out;
-        std::this_thread::sleep_for(std::chrono::milliseconds(config.update_interval));
 
+        publish_powermeter(j);
+
+        std::this_thread::sleep_for(std::chrono::milliseconds(config.update_interval));
     }
 }
 
