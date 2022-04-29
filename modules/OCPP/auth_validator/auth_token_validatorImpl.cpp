@@ -12,8 +12,8 @@ void auth_token_validatorImpl::init() {
 void auth_token_validatorImpl::ready() {
 }
 
-Object auth_token_validatorImpl::handle_validate_token(ocpp1_6::CiString20Type& token) {
-    auto auth_status = mod->charge_point->authorize_id_tag(token);
+Object auth_token_validatorImpl::handle_validate_token(std::string& token) {
+    auto auth_status = mod->charge_point->authorize_id_tag(ocpp1_6::CiString20Type(token));
     Object result;
     switch (auth_status) {
     case ocpp1_6::AuthorizationStatus::Accepted:

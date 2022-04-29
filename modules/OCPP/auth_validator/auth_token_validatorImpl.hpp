@@ -9,7 +9,6 @@
 //
 
 #include <generated/auth_token_validator/Implementation.hpp>
-
 #include "../OCPP.hpp"
 
 // ev@75ac1216-19eb-4182-a85c-820f1fc2c091:v1
@@ -33,7 +32,7 @@ public:
 
 protected:
     // command handler functions (virtual)
-    virtual Object handle_validate_token(ocpp1_6::CiString20Type& token) override;
+    virtual Object handle_validate_token(std::string& token) override;
 
     // ev@d2d1847a-7b88-41dd-ad07-92785f06f5c4:v1
     // insert your protected definitions here
