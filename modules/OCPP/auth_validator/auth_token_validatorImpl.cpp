@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: Apache-2.0
 // Copyright 2020 - 2022 Pionix GmbH and Contributors to EVerest
 #include "auth_token_validatorImpl.hpp"
+#include <ocpp1_6/types.hpp>
 
 namespace module {
 namespace auth_validator {
@@ -11,7 +12,7 @@ void auth_token_validatorImpl::init() {
 void auth_token_validatorImpl::ready() {
 }
 
-Object auth_token_validatorImpl::handle_validate_token(std::string& token) {
+Object auth_token_validatorImpl::handle_validate_token(ocpp1_6::CiString20Type& token) {
     auto auth_status = mod->charge_point->authorize_id_tag(token);
     Object result;
     switch (auth_status) {

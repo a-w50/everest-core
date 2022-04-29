@@ -56,16 +56,14 @@ void OCPP::init() {
                 it = this->ResConnMap.find(reservation_id);
                 this->ResConnMap.erase(it);
                 this->ResConnMap[reservation_id] = connector;
-
             } else {
                 return ocpp1_6::ReservationStatus::Faulted;
             }
 
             if (connector > 0 && connector <= this->r_evse_manager.size()) {
-
                 std::string response = this->r_evse_manager.at(connector - 1)
                                            ->call_reserve_now(reservation_id, idTag.get(), expiryDate.to_rfc3339(),
-                                                              parent_id.value_or(std::string("")));
+                                                              parent_id.value_or(ocpp1_6::CiString20Type(std::string(""))));
                 EVLOG(critical) << response;
                 return this->ResStatMap.at(response);
             } else {
