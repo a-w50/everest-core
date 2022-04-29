@@ -62,10 +62,9 @@ void OCPP::init() {
             }
 
             if (connector > 0 && connector <= this->r_evse_manager.size()) {
-                auto pid = parent_id.value_or(std::string(""));
                 std::string response = this->r_evse_manager.at(connector - 1)
                                            ->call_reserve_now(reservation_id, idTag.get(), expiryDate.to_rfc3339(),
-                                                              std::string(pid));
+                                                              parent_id.value_or(ocpp1_6::CiString20Type(std::string(""))).get());
                 return this->ResStatMap.at(response);
             } else {
                 return ocpp1_6::ReservationStatus::Unavailable;
