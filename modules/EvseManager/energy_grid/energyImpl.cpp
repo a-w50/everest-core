@@ -88,7 +88,7 @@ void energyImpl::init() {
 void energyImpl::ready() {
     json hw_caps = mod->get_hw_capabilities();
     json schedule_entry = json::object();
-    schedule_entry["timestamp"] = to_rfc3339(std::chrono::system_clock::now());
+    schedule_entry["timestamp"] = to_rfc3339(date::utc_clock::now());
     schedule_entry["request_parameters"] = json::object();
     schedule_entry["request_parameters"]["limit_type"] = "Hard";
     schedule_entry["request_parameters"]["ac_current_A"] = json::object();
