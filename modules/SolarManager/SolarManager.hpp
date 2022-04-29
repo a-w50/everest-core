@@ -15,7 +15,6 @@
 
 // headers for required interface implementations
 #include <generated/evse_manager/Interface.hpp>
-#include <generated/evse_manager_energy_control/Interface.hpp>
 #include <generated/powermeter/Interface.hpp>
 
 // ev@4bf81b14-a215-475c-a1d3-0a484ae48918:v1
@@ -31,14 +30,12 @@ public:
     SolarManager() = delete;
     SolarManager(const ModuleInfo& info, Everest::MqttProvider& mqtt_provider,
                  std::unique_ptr<solar_managerImplBase> p_main, std::unique_ptr<powermeterIntf> r_gridpowermeter,
-                 std::unique_ptr<evse_manager_energy_controlIntf> r_chargingdriverenergy,
                  std::unique_ptr<evse_managerIntf> r_chargingdriver,
                  std::unique_ptr<powermeterIntf> r_chargingdriverpowermeter, Conf& config) :
         ModuleBase(info),
         mqtt(mqtt_provider),
         p_main(std::move(p_main)),
         r_gridpowermeter(std::move(r_gridpowermeter)),
-        r_chargingdriverenergy(std::move(r_chargingdriverenergy)),
         r_chargingdriver(std::move(r_chargingdriver)),
         r_chargingdriverpowermeter(std::move(r_chargingdriverpowermeter)),
         config(config){};
@@ -47,7 +44,6 @@ public:
     Everest::MqttProvider& mqtt;
     const std::unique_ptr<solar_managerImplBase> p_main;
     const std::unique_ptr<powermeterIntf> r_gridpowermeter;
-    const std::unique_ptr<evse_manager_energy_controlIntf> r_chargingdriverenergy;
     const std::unique_ptr<evse_managerIntf> r_chargingdriver;
     const std::unique_ptr<powermeterIntf> r_chargingdriverpowermeter;
 

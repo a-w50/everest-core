@@ -19,8 +19,10 @@ list(APPEND EVEREST_MODULES_LIST
     JsTibber
     JsYetiSimulator
     ModbusMeter
+    ModbusMeterSimulator
     OCPP
     PersistentStore
+    SolarManager
     Store
     SunspecReader
     SunspecScanner

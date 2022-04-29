@@ -48,9 +48,6 @@
         "gridpowermeter": {
             "interface": "powermeter"
         },
-        "chargingdriverenergy": {
-            "interface": "evse_manager_energy_control"
-        },
         "chargingdriver": {
             "interface": "evse_manager"
         },

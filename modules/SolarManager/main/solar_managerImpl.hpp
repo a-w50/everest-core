@@ -71,21 +71,21 @@ private:
         UNINITIALIZED
     };
 
-    static json _pid_controller;
-    static bool _is_active;
-    static double _charging_power;
-    static _chargingState_t _charging_state;
-    static json _pause_msg;
-    static json _power_msg;
+    json _pid_controller;
+    bool _is_active;
+    double _charging_power;
+    _chargingState_t _charging_state;
+    json _pause_msg;
+    json _power_msg;
 
-    static void interval_start(const std::function<void(void)>& func, unsigned int interval_ms);
-    static void set_defaults();
+    void interval_start(const std::function<void(void)>& func, unsigned int interval_ms);
+    void set_defaults();
     void run_solar_manager();
     void activate_solar_manager();
     void deactivate_solar_manager();
     void on_session_events(json val) ;
     void on_grid_powermeter(json pm);
-    static void reset_pid_controller();
+    void reset_pid_controller();
     void on_set_p(double val);
     void on_set_i(double val);
     void on_set_d(double val);

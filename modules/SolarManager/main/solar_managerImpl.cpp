@@ -223,7 +223,7 @@ void solar_managerImpl::set_charging_power() {
             json msg = {
                 "max_current", (_charging_power / 230)
             };
-            mod->r_chargingdriverenergy->call_set_max_current(msg);
+            mod->r_chargingdriver->call_set_local_max_current(msg);
             _power_msg.at("power_log") = _charging_power;
             publish_logging(_power_msg);
         }
