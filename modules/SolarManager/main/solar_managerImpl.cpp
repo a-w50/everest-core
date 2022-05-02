@@ -17,18 +17,18 @@ void solar_managerImpl::init() {
     mod->r_chargingdriver->subscribe_session_events([this](json data) { this->on_session_events(data); });
 
     // External subscriptions
-    mod->mqtt.subscribe("/external/emgr/set_p_weight", [this](json data) { this->on_set_p(data.get<double>()); });
-    mod->mqtt.subscribe("/external/emgr/set_i_weight", [this](json data) { this->on_set_i(data.get<double>()); });
-    mod->mqtt.subscribe("/external/emgr/set_d_weight", [this](json data) { this->on_set_d(data.get<double>()); });
-    mod->mqtt.subscribe("/external/emgr/set_setpoint", [this](json data) { this->on_set_s(data.get<double>()); });
+    mod->mqtt.subscribe("/external/solar_manager/set_p_weight", [this](std::string data) { this->on_set_p(atof(data.c_str())); });
+    mod->mqtt.subscribe("/external/solar_manager/set_i_weight", [this](std::string data) { this->on_set_i(atof(data.c_str())); });
+    mod->mqtt.subscribe("/external/solar_manager/set_d_weight", [this](std::string data) { this->on_set_d(atof(data.c_str())); });
+    mod->mqtt.subscribe("/external/solar_manager/set_setpoint", [this](std::string data) { this->on_set_s(atof(data.c_str())); });
 
-    mod->mqtt.subscribe("/external/emgr/start", [this](json data) { this->on_start(); });
-    mod->mqtt.subscribe("/external/emgr/stop", [this](json data) { this->on_stop(); });
-    mod->mqtt.subscribe("/external/emgr/reset", [this](json data) { this->on_reset(); });
+    mod->mqtt.subscribe("/external/solar_manager/start", [this](const std::string data) { this->on_start(); });
+    mod->mqtt.subscribe("/external/solar_manager/stop", [this](const std::string data) { this->on_stop(); });
+    mod->mqtt.subscribe("/external/solar_manager/reset", [this](const std::string data) { this->on_reset(); });
 }
 
 void solar_managerImpl::ready() {
-    interval_start([this](){this->run_solar_manager();}, SOLAR_MANAGER_EXEC_INTERVAL_MS);
+    interval_start([this](){this->run_solar_manager();}, config.pid_output_interval);
 }
 
 void solar_managerImpl::interval_start(const std::function<void(void)>& func, unsigned int interval_ms) {
@@ -47,13 +47,13 @@ void solar_managerImpl::set_defaults() {
         {"i_term", 0.0},
         {"d_term", 0.0},
         {"error", 0.0},
-        {"p_weight", 0.0},
-        {"i_weight", 0.0},
-        {"d_weight", 0.0},
-        {"setpoint", 0.0},
-        {"i_limit", -1.0},
-        {"min_out", 0.0},
-        {"max_out", 0.0}
+        {"p_weight", double(config.pid_p_weight)},
+        {"i_weight", double(config.pid_i_weight)},
+        {"d_weight", double(config.pid_d_weight)},
+        {"setpoint", double(config.pid_setpoint)},
+        {"i_limit", double(config.pid_i_limit)},
+        {"min_out", double(config.pid_min_output)},
+        {"max_out", double(config.pid_max_output)}
     };
 
     _is_active = false;
@@ -71,14 +71,14 @@ void solar_managerImpl::run_solar_manager() {
 
 void solar_managerImpl::activate_solar_manager() {
     _is_active = true;
-    mod->mqtt.publish("/external/emgr/emgr_is_active", _is_active);
-    publish_emgr_is_active(_is_active);
+    mod->mqtt.publish("/external/solar_manager/solar_manager_is_active", _is_active);
+    publish_solar_manager_is_active(_is_active);
 }
 
 void solar_managerImpl::deactivate_solar_manager() {
     _is_active = false;
-    mod->mqtt.publish("/external/emgr/emgr_is_active", _is_active);
-    publish_emgr_is_active(_is_active);
+    mod->mqtt.publish("/external/solar_manager/solar_manager_is_active", _is_active);
+    publish_solar_manager_is_active(_is_active);
 }
 
 void solar_managerImpl::on_session_events(json val) {
@@ -93,7 +93,7 @@ void solar_managerImpl::on_session_events(json val) {
 }
 
 void solar_managerImpl::on_grid_powermeter(json pm) {
-    mod->mqtt.publish("/external/emgr/emgr_is_active", _is_active);
+    mod->mqtt.publish("/external/solar_manager/solar_manager_is_active", _is_active);
 
     if (!_is_active) {
         return;
@@ -111,7 +111,8 @@ void solar_managerImpl::on_grid_powermeter(json pm) {
 
     // integral term
     double i_term_old = double(_pid_controller.at("i_term"));
-    _pid_controller.at("i_term") += error * input_interval;
+    _pid_controller.at("i_term") = i_term_old + (error * input_interval);
+
     if (_pid_controller.at("i_limit") > 0) {
         if (double(_pid_controller.at("i_term")) > double(_pid_controller.at("i_limit"))) {
             _pid_controller.at("i_term") = _pid_controller.at("i_limit");
@@ -140,8 +141,13 @@ void solar_managerImpl::on_grid_powermeter(json pm) {
         {"pid_p", ( double(_pid_controller.at("p_term")) * double(_pid_controller.at("p_weight")) ) },
         {"pid_i", ( double(_pid_controller.at("i_term")) * double(_pid_controller.at("i_weight")) ) },
         {"pid_d", ( double(_pid_controller.at("d_term")) * double(_pid_controller.at("d_weight")) ) },
-        {"pid_error", double(_pid_controller.at("error")) }
+        {"pid_error", double(_pid_controller.at("error")) },
+        {"p_weight", double(_pid_controller.at("p_weight"))},
+        {"i_weight", double(_pid_controller.at("i_weight"))},
+        {"d_weight", double(_pid_controller.at("d_weight"))},
+        {"setpoint", double(_pid_controller.at("setpoint"))}
     };
+    // EVLOG(error) << msg; // TODO(LAD): remove me
     publish_logging(msg);
 
     // calculate charging power
@@ -221,7 +227,7 @@ void solar_managerImpl::set_charging_power() {
             publish_logging(_pause_msg);
         } else {
             json msg = {
-                "max_current", (_charging_power / 230)
+                "max_current", double(_charging_power / 230)
             };
             mod->r_chargingdriver->call_set_local_max_current(msg);
             _power_msg.at("power_log") = _charging_power;

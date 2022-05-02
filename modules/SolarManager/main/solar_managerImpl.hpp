@@ -57,16 +57,16 @@ private:
     // ev@3370e4dd-95f4-47a9-aaec-ea76f34a66c9:v1
     // insert your private definitions here
     enum _chargingState_t {
-        ACTIVE, 
-        DEACTIVATED, 
-        SESSION_STARTED, 
-        CHARGING_STARTED, 
-        CHARGING_PAUSED_EV, 
-        CHARGING_PAUSED_EVSE, 
-        CHARGING_RESUMED, 
-        CHARGING_FINISHED, 
-        SESSION_FINISHED, 
-        ERROR, 
+        ACTIVE,
+        DEACTIVATED,
+        SESSION_STARTED,
+        CHARGING_STARTED,
+        CHARGING_PAUSED_EV,
+        CHARGING_PAUSED_EVSE,
+        CHARGING_RESUMED,
+        CHARGING_FINISHED,
+        SESSION_FINISHED,
+        ERROR,
         PERMANENT_FAULT,
         UNINITIALIZED
     };
@@ -83,7 +83,7 @@ private:
     void run_solar_manager();
     void activate_solar_manager();
     void deactivate_solar_manager();
-    void on_session_events(json val) ;
+    void on_session_events(json val);
     void on_grid_powermeter(json pm);
     void reset_pid_controller();
     void on_set_p(double val);
@@ -99,7 +99,6 @@ private:
 
 // ev@3d7da0ad-02c2-493d-9920-0bbbd56b9876:v1
 // insert other definitions here
-#define SOLAR_MANAGER_EXEC_INTERVAL_MS (5000)
 // ev@3d7da0ad-02c2-493d-9920-0bbbd56b9876:v1
 
 } // namespace main

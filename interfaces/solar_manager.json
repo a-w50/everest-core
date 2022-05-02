@@ -5,7 +5,7 @@
             "description": "Various data logging",
             "type": "object"
         },
-        "emgr_is_active": {
+        "solar_manager_is_active": {
             "description": "(read) Status of the module SolarManager: true -> active; false -> deactivated",
             "type": "boolean"
         }
