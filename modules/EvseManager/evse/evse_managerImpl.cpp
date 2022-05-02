@@ -21,19 +21,6 @@ std::chrono::time_point<date::utc_clock> from_rfc3339(std::string t) {
     return tp;
 }
 
-std::chrono::time_point<date::utc_clock> from_rfc3339_2(std::string t) {
-    std::istringstream infile{t};
-    std::chrono::time_point<date::utc_clock> tp;
-    infile >> date::parse("%FT%T", tp);
-
-    // std::cout <<"timepoint"<<" "<<t<<" "<< tp.time_since_epoch().count()<<std::endl;
-    EVLOG(critical) << "\n\n\nstring: " << t;
-    EVLOG(critical) << "utc_clock: " << tp;
-    // auto tme = std::chrono::system_clock::to_time_t(tp);
-    // EVLOG(critical) << "rfc untillast: " << std::ctime(&tme); // Expecting CET time - 10
-    return tp;
-}
-
 bool str_to_bool(std::string data) {
     if (data == "true") {
         return true;

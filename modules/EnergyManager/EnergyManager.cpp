@@ -176,7 +176,7 @@ void EnergyManager::optimize_one_level(json& energy, json& optimized_values,
     }
 }
 
-json EnergyManager::get_limit_from_schedule(json s, const std::chrono::time_point<date::utc_clock> timepoint) {
+json EnergyManager::get_sub_element_from_schedule_at_time(json s, const std::chrono::time_point<date::utc_clock> timepoint) {
     // first entry is valid now per agreement
     json ret = s[0];
     // walk through schedule to find a better fit
