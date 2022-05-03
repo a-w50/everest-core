@@ -83,16 +83,16 @@ private:
     void run_solar_manager();
     void activate_solar_manager();
     void deactivate_solar_manager();
-    void on_session_events(json val);
-    void on_grid_powermeter(json pm);
+    void receive_evse_session_events(json val);
+    void update_from_grid_powermeter(json pm);
     void reset_pid_controller();
-    void on_set_p(double val);
-    void on_set_i(double val);
-    void on_set_d(double val);
-    void on_set_s(double val);
-    void on_start();
-    void on_stop();
-    void on_reset();
+    void set_p_weight(double val);
+    void set_i_weight(double val);
+    void set_d_weight(double val);
+    void set_setpoint(double val);
+    void start_solar_manager();
+    void stop_solar_manager();
+    void reset_solar_manager();
     void set_charging_power();
     // ev@3370e4dd-95f4-47a9-aaec-ea76f34a66c9:v1
 };

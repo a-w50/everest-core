@@ -13,22 +13,22 @@ void solar_managerImpl::init() {
     set_defaults();
 
     // Subscribe to powermeter
-    mod->r_gridpowermeter->subscribe_powermeter([this](json data) { this->on_grid_powermeter(data); });
-    mod->r_chargingdriver->subscribe_session_events([this](json data) { this->on_session_events(data); });
+    mod->r_gridpowermeter->subscribe_powermeter([this](json data) { this->update_from_grid_powermeter(data); });
+    mod->r_chargingdriver->subscribe_session_events([this](json data) { this->receive_evse_session_events(data); });
 
     // External subscriptions
-    mod->mqtt.subscribe("/external/solar_manager/set_p_weight", [this](std::string data) { this->on_set_p(atof(data.c_str())); });
-    mod->mqtt.subscribe("/external/solar_manager/set_i_weight", [this](std::string data) { this->on_set_i(atof(data.c_str())); });
-    mod->mqtt.subscribe("/external/solar_manager/set_d_weight", [this](std::string data) { this->on_set_d(atof(data.c_str())); });
-    mod->mqtt.subscribe("/external/solar_manager/set_setpoint", [this](std::string data) { this->on_set_s(atof(data.c_str())); });
+    mod->mqtt.subscribe("/external/solar_manager/set_p_weight", [this](std::string data) { this->set_p_weight(atof(data.c_str())); });
+    mod->mqtt.subscribe("/external/solar_manager/set_i_weight", [this](std::string data) { this->set_i_weight(atof(data.c_str())); });
+    mod->mqtt.subscribe("/external/solar_manager/set_d_weight", [this](std::string data) { this->set_d_weight(atof(data.c_str())); });
+    mod->mqtt.subscribe("/external/solar_manager/set_setpoint", [this](std::string data) { this->set_setpoint(atof(data.c_str())); });
 
-    mod->mqtt.subscribe("/external/solar_manager/start", [this](const std::string data) { this->on_start(); });
-    mod->mqtt.subscribe("/external/solar_manager/stop", [this](const std::string data) { this->on_stop(); });
-    mod->mqtt.subscribe("/external/solar_manager/reset", [this](const std::string data) { this->on_reset(); });
+    mod->mqtt.subscribe("/external/solar_manager/start", [this](const std::string data) { this->start_solar_manager(); });
+    mod->mqtt.subscribe("/external/solar_manager/stop",  [this](const std::string data) { this->stop_solar_manager(); });
+    mod->mqtt.subscribe("/external/solar_manager/reset", [this](const std::string data) { this->reset_solar_manager(); });
 }
 
 void solar_managerImpl::ready() {
-    interval_start([this](){this->run_solar_manager();}, config.pid_output_interval);
+    interval_start([this](){ this->run_solar_manager(); }, config.pid_output_interval);
 }
 
 void solar_managerImpl::interval_start(const std::function<void(void)>& func, unsigned int interval_ms) {
@@ -81,7 +81,7 @@ void solar_managerImpl::deactivate_solar_manager() {
     publish_solar_manager_is_active(_is_active);
 }
 
-void solar_managerImpl::on_session_events(json val) {
+void solar_managerImpl::receive_evse_session_events(json val) {
     // Decide between charging / not charging
     if (val.contains("event")) {
         if (val.at("event") == CHARGING_STARTED || val.at("event") == CHARGING_RESUMED) {
@@ -92,7 +92,7 @@ void solar_managerImpl::on_session_events(json val) {
     }
 }
 
-void solar_managerImpl::on_grid_powermeter(json pm) {
+void solar_managerImpl::update_from_grid_powermeter(json pm) {
     mod->mqtt.publish("/external/solar_manager/solar_manager_is_active", _is_active);
 
     if (!_is_active) {
@@ -167,52 +167,52 @@ void solar_managerImpl::reset_pid_controller() {
     _pid_controller.at("error") = 0.0;
 }
 
-void solar_managerImpl::on_set_p(double val) {
+void solar_managerImpl::set_p_weight(double val) {
     EVLOG(info) << "Set p_weight to " << val;
     _pid_controller.at("p_weight") = val;
     reset_pid_controller();
 }
 
-void solar_managerImpl::on_set_i(double val) {
+void solar_managerImpl::set_i_weight(double val) {
     EVLOG(info) << "Set i_weight to " << val;
     _pid_controller.at("i_weight") = val;
     reset_pid_controller();
 }
 
-void solar_managerImpl::on_set_d(double val) {
+void solar_managerImpl::set_d_weight(double val) {
     EVLOG(info) << "Set d_weight to " << val;
     _pid_controller.at("d_weight") = val;
     reset_pid_controller();
 }
 
-void solar_managerImpl::on_set_s(double val) {
+void solar_managerImpl::set_setpoint(double val) {
     EVLOG(info) << "Set setpoint to " << val;
     _pid_controller.at("setpoint") = val;
     reset_pid_controller();
 }
 
-void solar_managerImpl::on_start() {
+void solar_managerImpl::start_solar_manager() {
     if (_is_active) {
-        EVLOG(info) << "PID-Controller is already active..";
+        EVLOG(info) << "trying to start PID-Controller but it is already active...";
         return;
     }
     reset_pid_controller();
     activate_solar_manager();
-    EVLOG(debug) << "PID-Controller is starting..";
+    EVLOG(debug) << "PID-Controller is starting...";
 }
 
-void solar_managerImpl::on_stop() {
+void solar_managerImpl::stop_solar_manager() {
     if (!_is_active) {
-        EVLOG(info) << "PID-Controller is not active..";
+        EVLOG(info) << "trying to stop PID-Controller but it is not active...";
         return;
     }
     deactivate_solar_manager();
     _charging_power = 0.0;
     set_charging_power();
-    EVLOG(debug) << "PID-Controller is deactivating..";
+    EVLOG(debug) << "PID-Controller is deactivating...";
 }
 
-void solar_managerImpl::on_reset() {
+void solar_managerImpl::reset_solar_manager() {
     reset_pid_controller();
 }
 
