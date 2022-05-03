@@ -5,12 +5,29 @@
 #include <chrono>
 #include <date/date.h>
 #include <date/tz.h>
+// #include <libtz.h>
 
 namespace module {
 namespace energy_grid {
 
+// std::string to_rfc3339(std::chrono::time_point<date::utc_clock> t) {
+//     return date::format("%FT%TZ", std::chrono::time_point_cast<std::chrono::milliseconds>(t));
+// }
+
 std::string to_rfc3339(std::chrono::time_point<date::utc_clock> t) {
-    return date::format("%FT%TZ", std::chrono::time_point_cast<std::chrono::milliseconds>(t));
+    /**
+    const auto sys_t = date::utc_clock::to_sys(t);
+    const auto now_ms = std::chrono::time_point_cast<std::chrono::milliseconds>(sys_t);
+    const auto now_s = std::chrono::time_point_cast<std::chrono::seconds>(now_ms);
+    const auto millis = now_ms - now_s;
+    const auto c_now = std::chrono::system_clock::to_time_t(now_s);
+
+    std::stringstream ss;
+    ss << std::put_time(std::gmtime(&c_now), "%FT%T")
+       << '.' << std::setfill('0') << std::setw(3) << millis.count() << 'Z';
+    return ss.str();
+    **/
+   return std::string("");
 }
 
 std::chrono::time_point<date::utc_clock> from_rfc3339(std::string t) {
@@ -27,7 +44,9 @@ void energyImpl::init() {
     {
        std::lock_guard<std::mutex> lock(this->energy_mutex);
        json schedule_entry;
-       schedule_entry["timestamp"] = to_rfc3339(date::utc_clock::now());
+       std::chrono::time_point<date::utc_clock> nw = date::utc_clock::now();
+       std::string nws = to_rfc3339(nw);
+       schedule_entry["timestamp"] = nws;
        schedule_entry["request_parameters"] = json::object();
        schedule_entry["request_parameters"]["limit_type"] = "Hard";
        schedule_entry["request_parameters"]["ac_current_A"] = json::object();

@@ -203,7 +203,7 @@ std::string evse_managerImpl::handle_reserve_now(int& reservation_id, std::strin
                                                  std::string& parent_id) {
 
     // return mod->reserve_now(reservation_id, auth_token, from_rfc3339(expiry_date), parent_id);
-    return mod->reserve_now(reservation_id, auth_token, from_rfc3339_2(expiry_date), parent_id);
+    return mod->reserve_now(reservation_id, auth_token, from_rfc3339(expiry_date), parent_id);
 };
 
 bool evse_managerImpl::handle_cancel_reservation() {
