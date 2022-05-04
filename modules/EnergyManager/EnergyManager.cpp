@@ -156,7 +156,7 @@ void EnergyManager::optimize_one_level(json& energy, json& optimized_values,
                 limits_import["request_parameters"]["ac_current_A"] = json::object();
                 limits_import["request_parameters"]["ac_current_A"]["current_A"] = max_current_for_next_level_A;
 
-                auto result = json::array();
+                json result;
                 result["limits_import"] = limits_import;
                 result["limits_export"] = json::object();
                 result["uuid"] = energy.at("uuid");

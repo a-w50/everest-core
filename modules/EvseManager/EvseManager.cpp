@@ -132,7 +132,11 @@ std::string EvseManager::reserve_now(const int _reservation_id, const std::strin
 
     // accept new reservation
     reserved_auth_token = token;
+    EVLOG(critical) << "valid_until: " << valid_until;
+    EVLOG(critical) << "reservation_valid_until: " << reservation_valid_until;
     reservation_valid_until = valid_until;
+    EVLOG(critical) << "valid_until: " << valid_until;
+    EVLOG(critical) << "reservation_valid_until: " << reservation_valid_until;
     reserved_auth_token_parent_id = parent_id;
     reserved = true;
 
