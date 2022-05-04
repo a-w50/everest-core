@@ -2,8 +2,6 @@
 // Copyright 2020 - 2021 Pionix GmbH and Contributors to EVerest
 #include <thread>
 #include <future>
-#include <date/date.h>
-#include <date/tz.h>
 #include <chrono>
 
 class evThread {
