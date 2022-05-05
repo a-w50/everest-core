@@ -11,6 +11,7 @@ list(APPEND EVEREST_MODULES_LIST
     ExampleUser
     JsAuth
     JsCarSimulator
+    JsDieselGenerator
     JsDummyTokenProvider
     JsDummyTokenValidator
     JsForecastDotSolar

@@ -1,0 +1,22 @@
+{
+    "description": "This module ... and publishes it.",
+    "provides": {
+        "main": {
+            "description": "This interface is responsible for providing ... ",
+            "interface": "local_energy_generator",
+            "config": {
+                "update_interval": {
+                    "description": "Update interval in milliseconds.",
+                    "type": "integer"
+                }
+            }
+        }
+    },
+    "enable_external_mqtt": false,
+    "metadata": {
+        "license": "https://opensource.org/licenses/Apache-2.0",
+        "authors": [
+            "Lars Dieckmann"
+        ]
+    }
+}

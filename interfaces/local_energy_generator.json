@@ -1,0 +1,16 @@
+{
+    "description": "This interface defines the interface for an energy price forecast",
+    "vars": {
+        "energy_generation": {
+            "description": "Forecast JSON Object containing timestamps and the price forecast for both import and export.",
+            "type": "object",
+            "properties": {
+                "energy_output_W": {
+                    "description": "output of generator",
+                    "type": "number"
+                },
+                "additionalProperties": false
+            }
+        }
+    }
+}

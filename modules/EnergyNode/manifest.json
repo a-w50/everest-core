@@ -34,6 +34,11 @@
             "interface": "energy_price_information",
             "min_connections": 0,
             "max_connections": 128
+        },
+        "local_power_generator": {
+            "interface": "local_energy_generator",
+            "min_connections": 0,
+            "max_connections": 128
         }
     },
     "enable_external_mqtt": false,

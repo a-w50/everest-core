@@ -124,6 +124,12 @@
                     "module_id": "yeti_driver",
                     "implementation_id": "powermeter"
                 }
+            ],
+            "local_power_generator": [ 
+                {
+                    "module_id": "diesel_generator",
+                    "implementation_id": "main"
+                }
             ]
         }
     },
@@ -180,6 +186,14 @@
                     "implementation_id": "powermeter"
                 }
             ]
+        }
+    },
+    "diesel_generator": {
+        "module": "JsDieselGenerator",
+        "config_implementation": {
+            "main": {
+                "update_interval": 300
+            }
         }
     }
 }
