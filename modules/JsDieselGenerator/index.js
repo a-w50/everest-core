@@ -5,8 +5,31 @@ const { evlog, boot_module } = require('everestjs');
 function run_generator(mod) {
 
   // code
-  let energy_generation_msg = { energy_output_W: 1000 };
-  mod.provides.main.publish.energy_generation(energy_generation_msg);
+  let time_now = new Date().toISOString();
+  let energy_generation_msg = { 
+    node_type: "Grid",
+    uuid: mod.info.id,
+    schedule_export: [
+      {
+        timestamp: time_now,
+        request_parameters: {
+          limit_type: "Soft",
+          ac_current_A: {
+            max_current_A: 77.0,
+            min_current_A: 0.0,
+            max_phase_count: 3,
+            min_phase_count: 1,
+            supports_changing_phases_during_charging: false
+          }
+        },
+        price_per_kwh: {
+          value: 0.0,
+          currency: "EUR",
+        }
+      }
+    ]
+  };
+  mod.provides.main.publish.energy(energy_generation_msg);
 
 }
 

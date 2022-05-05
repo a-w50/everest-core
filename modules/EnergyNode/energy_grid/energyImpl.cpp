@@ -73,6 +73,39 @@ void energyImpl::init() {
         });
     }
 
+    for (auto& entry : mod->r_local_power_generator) {
+        entry->subscribe_energy([this](json e) {
+            // Received new energy related object from a child. Update in the cached object and republish.
+            {
+                std::lock_guard<std::mutex> lock(this->energy_mutex);
+                if (energy.contains("children")) {
+                    bool child_exists = false;
+                    for (auto& child : energy["children"]) {
+                        if (child.contains("uuid")) {
+                            if (e.contains("uuid")) {
+                                if (child["uuid"] == e.at("uuid")) {
+                                    child_exists = true;
+                                    // update child information
+                                    child = e;
+                                }
+                            } else {
+                                EVLOG(warning) << "Warning! e[] does not contain element 'uuid': " << e;
+                            }
+                        }
+                    }
+                    if (child_exists == false) {
+                        energy["children"].push_back(e);
+                    }
+                } else {
+                    energy["children"] = json::array();
+                    energy["children"].push_back(e);
+                }
+            }
+
+            publish_complete_energy_object();
+        });
+    }
+
     // r_price_information is optional
     for (auto& entry : mod->r_price_information) {
         entry->subscribe_energy_price_schedule([this](json p) {

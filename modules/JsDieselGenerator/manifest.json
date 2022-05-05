@@ -3,7 +3,7 @@
     "provides": {
         "main": {
             "description": "This interface is responsible for providing ... ",
-            "interface": "local_energy_generator",
+            "interface": "energy",
             "config": {
                 "update_interval": {
                     "description": "Update interval in milliseconds.",
