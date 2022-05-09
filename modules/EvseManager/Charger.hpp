@@ -76,6 +76,7 @@ public:
 
     bool enable();
     bool disable();
+    bool set_faulted();
     // switch to next charging session after Finished
     bool restart();
 

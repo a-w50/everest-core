@@ -51,6 +51,9 @@ void evse_managerImpl::init() {
     mod->mqtt.subscribe("/external/cmd/disable",
                         [&charger = mod->charger](const std::string data) { charger->disable(); });
 
+    mod->mqtt.subscribe("/external/cmd/faulted",
+                        [&charger = mod->charger](const std::string data) { charger->set_faulted(); });
+
     mod->mqtt.subscribe("/external/cmd/switch_three_phases_while_charging",
                         [&charger = mod->charger](const std::string data) {
                             charger->switchThreePhasesWhileCharging(str_to_bool(data));
@@ -176,6 +179,10 @@ bool evse_managerImpl::handle_enable() {
 
 bool evse_managerImpl::handle_disable() {
     return mod->charger->disable();
+};
+
+bool evse_managerImpl::handle_set_faulted() {
+    return mod->charger->set_faulted();
 };
 
 bool evse_managerImpl::handle_pause_charging() {

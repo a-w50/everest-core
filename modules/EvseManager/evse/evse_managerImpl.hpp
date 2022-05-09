@@ -40,6 +40,7 @@ protected:
     // command handler functions (virtual)
     virtual bool handle_enable() override;
     virtual bool handle_disable() override;
+    virtual bool handle_set_faulted() override;
     virtual bool handle_pause_charging() override;
     virtual bool handle_resume_charging() override;
     virtual bool handle_cancel_charging() override;

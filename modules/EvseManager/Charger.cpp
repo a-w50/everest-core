@@ -626,6 +626,13 @@ bool Charger::enable() {
     return false;
 }
 
+bool Charger::set_faulted() {
+    std::lock_guard<std::recursive_mutex> lock(stateMutex);
+    currentState = EvseState::Faulted;
+    signalEvent(EvseEvent::PermanentFault);
+    return true;
+}
+
 bool Charger::restart() {
     std::lock_guard<std::recursive_mutex> lock(stateMutex);
 
