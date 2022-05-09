@@ -49,13 +49,13 @@ void OCPP::init() {
     this->charge_point->register_reserve_now_callback(
         [this](int32_t reservation_id, int32_t connector, ocpp1_6::DateTime expiryDate, ocpp1_6::CiString20Type idTag,
                boost::optional<ocpp1_6::CiString20Type> parent_id) {
-            if (ResConnMap.count(reservation_id) == 0) {
-                this->ResConnMap[reservation_id] = connector;
-            } else if (ResConnMap.count(reservation_id) == 1) {
+            if (res_conn_map.count(reservation_id) == 0) {
+                this->res_conn_map[reservation_id] = connector;
+            } else if (res_conn_map.count(reservation_id) == 1) {
                 std::map<int32_t, int32_t>::iterator it;
-                it = this->ResConnMap.find(reservation_id);
-                this->ResConnMap.erase(it);
-                this->ResConnMap[reservation_id] = connector;
+                it = this->res_conn_map.find(reservation_id);
+                this->res_conn_map.erase(it);
+                this->res_conn_map[reservation_id] = connector;
 
             } else {
                 return ocpp1_6::ReservationStatus::Faulted;
@@ -72,7 +72,7 @@ void OCPP::init() {
         });
 
     this->charge_point->register_cancel_reservation_callback([this](int32_t reservationId) {
-        int32_t connector = this->ResConnMap[reservationId];
+        int32_t connector = this->res_conn_map[reservationId];
         if (connector > 0 && connector <= this->r_evse_manager.size()) {
             return this->CanResStatMap.at(this->r_evse_manager.at(connector - 1)->call_cancel_reservation());
         } else {

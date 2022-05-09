@@ -14,7 +14,7 @@
             "has_ventilation": true,
             "country_code": "DE",
             "rcd_enabled": true,
-        "evse_id": "1"
+            "evse_id": "1"
         },
         "connections": {
             "bsp": [

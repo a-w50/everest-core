@@ -109,34 +109,35 @@ std::string EvseManager::reserve_now(const int _reservation_id, const std::strin
                                      const std::string& parent_id) {
 
     // is the evse Unavailable?
-    if (charger->getCurrentState() == Charger::EvseState::Disabled)
+    if (charger->getCurrentState() == Charger::EvseState::Disabled) {
         return "Unavailable";
+    }
 
     // is the evse faulted?
-    if (charger->getCurrentState() == Charger::EvseState::Faulted)
+    if (charger->getCurrentState() == Charger::EvseState::Faulted) {
         return "Faulted";
+    }
 
     // is the reservation still valid in time?
-    if (date::utc_clock::now() > valid_until)
+    if (date::utc_clock::now() > valid_until) {
         return "Rejected";
+    }
 
     // is the connector currently ready to accept a new car?
-    if (charger->getCurrentState() != Charger::EvseState::Idle)
+    if (charger->getCurrentState() != Charger::EvseState::Idle) {
         return "Occupied";
+    }
 
     // is it already reserved with a different reservation_id?
-    if (reservation_valid() && _reservation_id != reservation_id)
+    if (reservation_valid() && _reservation_id != reservation_id) {
         return "Rejected";
+    }
 
     std::lock_guard<std::mutex> lock(reservation_mutex);
 
     // accept new reservation
     reserved_auth_token = token;
-    EVLOG(critical) << "valid_until: " << valid_until;
-    EVLOG(critical) << "reservation_valid_until: " << reservation_valid_until;
     reservation_valid_until = valid_until;
-    EVLOG(critical) << "valid_until: " << valid_until;
-    EVLOG(critical) << "reservation_valid_until: " << reservation_valid_until;
     reserved_auth_token_parent_id = parent_id;
     reserved = true;
 
@@ -171,9 +172,6 @@ bool EvseManager::updateLocalMaxCurrentLimit(float max_current) {
 
 bool EvseManager::cancel_reservation() {
     bool res_valid = reservation_valid();
-    #ifndef NDEBUG
-        EVLOG(critical) << "res_valid: " << res_valid;
-    #endif
 
     std::lock_guard<std::mutex> lock(reservation_mutex);
     if (res_valid) {
@@ -191,22 +189,17 @@ bool EvseManager::cancel_reservation() {
     }
 
     reserved = false;
-    #ifndef NDEBUG
-        EVLOG(critical) << "res_valid: " << res_valid;
-    #endif
     return false;
 }
 
 // Signals that reservation was used to start this charging.
 // Does nothing if no reservation is active.
 void EvseManager::use_reservation_to_start_charging() {
-    #ifndef NDEBUG
-        EVLOG(critical) << "Reserved: " << reserved;
-    #endif
 
     std::lock_guard<std::mutex> lock(reservation_mutex);
-    if (!reserved)
+    if (!reserved) {
         return;
+    }
 
     // publish event to other modules
     json se;
@@ -217,9 +210,6 @@ void EvseManager::use_reservation_to_start_charging() {
     signalReservationEvent(se);
 
     reserved = false;
-    #ifndef NDEBUG
-        EVLOG(critical) << "Reserved: " << reserved << "se: " << se;
-    #endif
 }
 
 float EvseManager::getLocalMaxCurrentLimit() {
@@ -254,12 +244,17 @@ bool EvseManager::reservation_valid() {
 */
 bool EvseManager::reserved_for_different_token(const std::string& token) {
     std::lock_guard<std::mutex> lock(reservation_mutex);
-    if (!reserved)
+    if (!reserved) {
         return false;
-    if (reserved_auth_token == token)
+    }
+
+    if (reserved_auth_token == token) {
         return false;
+    }
     else
+    {
         return true;
+    }
 }
 
 } // namespace module

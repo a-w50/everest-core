@@ -585,7 +585,6 @@ Charger::EvseState Charger::getCurrentState() {
 }
 
 void Charger::Authorize(bool a, const std::string& userid) {
-    EVLOG(critical) << "Charger::Authorize";
     std::lock_guard<std::recursive_mutex> lock(configMutex);
     authorized = a;
     // FIXME: do sth useful with userid

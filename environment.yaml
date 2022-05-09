@@ -1,4 +1,3 @@
-name: everest-core-testing
 channels:
 - conda-forge
 dependencies:
