@@ -10,7 +10,6 @@ set(CMAKE_POSITION_INDEPENDENT_CODE ON)
 
 if (NOT CMAKE_BUILD_TYPE)
     set(CMAKE_BUILD_TYPE RelWithDebInfo CACHE STRING "Build type" FORCE)
-    #set(CMAKE_BUILD_TYPE Debug CACHE STRING "Build type" FORCE)
 endif()
 
 option(EVEREST_CROSS_COMPILE "Cross compile the EVerest framework" OFF)
@@ -117,10 +116,3 @@ add_subdirectory(modules)
 install(DIRECTORY "interfaces/" DESTINATION interfaces
         FILES_MATCHING PATTERN "*.json"
 )
-
-# find_package(date CONFIG REQUIRED)
-# set(CMAKE_C_FLAGS -m32)
-# set(CMAKE_CXX_FLAGS -m32)
-
-
-#set(CMAKE_BUILD_TYPE Debug)

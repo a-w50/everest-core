@@ -98,7 +98,6 @@ private:
     // Reservations
     std::string reserved_auth_token;
     std::string reserved_auth_token_parent_id;
-    // std::chrono::time_point<date::utc_clock> reservation_valid_until;
     std::chrono::time_point<date::utc_clock> reservation_valid_until;
     bool reserved; // internal, use reservation_valid() if you want to find out if it is reserved
     int reservation_id;

@@ -70,16 +70,6 @@ private:
 
     std::string generate_session_uuid();
 
-    /**
-    const time_t now_utc() {
-        // return std::chrono::system_clock::to_time_t(date::utc_clock::now());
-        // return utc_clock::now();
-        date::utc_clock clk;// = new date::utc_clock();
-        // auto u = clock_cast<date::utc_clock>(std::chrono::system_clock::to_time_t(date::utc_clock::now()));
-        // return std::chrono::system_clock::to_time_t(date::utc_clock::now());
-        return date::utc_clock::now();
-    }
-    **/
     std::string session_uuid;
     // ev@3370e4dd-95f4-47a9-aaec-ea76f34a66c9:v1
 };
