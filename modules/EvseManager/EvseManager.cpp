@@ -162,7 +162,7 @@ std::string EvseManager::reserve_now(const int _reservation_id, const std::strin
 bool EvseManager::updateLocalMaxCurrentLimit(float max_current) {
     if (max_current >= 0.0F && max_current < EVSE_ABSOLUTE_MAX_CURRENT) {
         local_max_current_limit = max_current;
-        
+
         // wait for EnergyManager to assign optimized current on next opimizer run
 
         return true;
@@ -250,9 +250,7 @@ bool EvseManager::reserved_for_different_token(const std::string& token) {
 
     if (reserved_auth_token == token) {
         return false;
-    }
-    else
-    {
+    } else {
         return true;
     }
 }

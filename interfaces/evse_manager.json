@@ -15,6 +15,13 @@
                 "type": "boolean"
             }
         },
+        "set_faulted": {
+            "description": "Sets the evse manager to faulted",
+            "result": {
+                "description": "Returns true if evse was set to faulted (or is already in that state)",
+                "type": "boolean"
+            }
+        },
         "pause_charging": {
             "description": "Pauses charging",
             "result": {
