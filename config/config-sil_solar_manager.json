@@ -55,7 +55,7 @@
         "connections": {
             "tokenProvider": [
                 {
-                    "module_id": "token_provider_1",
+                    "module_id": "token_provider1",
                     "implementation_id": "main"
                 }
             ],
@@ -67,7 +67,7 @@
             ]
         }
     },
-    "token_provider_1": {
+    "token_provider1": {
         "module": "JsDummyTokenProvider",
         "connections": {
             "evse": [
