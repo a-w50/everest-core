@@ -263,7 +263,8 @@
                         "Solar",
                         "Battery",
                         "Fuse",
-                        "Evse"
+                        "Evse",
+                        "LocalSource"
                     ]
                 },
                 "uuid": {
