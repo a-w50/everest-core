@@ -9,7 +9,7 @@ function run_generator(mod) {
   // code
   let time_now = new Date().toISOString();
   let energy_generation_msg = { 
-    node_type: "Grid",
+    node_type: "LocalSource",
     uuid: mod.info.id,
     schedule_export: [
       {
@@ -43,17 +43,18 @@ function setOutputPower(mod, inputData) {
     if (typeof inputData.limits_export.request_parameters != "undefined") {
       if (typeof inputData.limits_export.request_parameters.ac_current_A != "undefined") {
         if (typeof inputData.limits_export.request_parameters.ac_current_A.current_A != "undefined") {
-          power_to_be_set = inputData.limits_export.request_parameters.ac_current_A.current_A;
+          power_to_be_set = inputData.limits_export.request_parameters.ac_current_A.current_A * 230;
+          evlog.info("setOutputPower to: ", power_to_be_set);
         }
       }
     }
   }
 
   if (0 <= power_to_be_set){
-    if (power_to_be_set <= 7200){
+    if (power_to_be_set <= (32 * 230) ){
       _output_power_W = power_to_be_set;
     } else {
-      _output_power_W = 7200;
+      _output_power_W = (32 * 230);
     }
   } else {
     _output_power_W = 0;
