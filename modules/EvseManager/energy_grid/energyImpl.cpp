@@ -67,6 +67,9 @@ void energyImpl::init() {
                             } else if (mode == EVSE_OPTIMIZER_MODE_PRICE_DRIVEN) {
                                 _optimizer_mode = EVSE_OPTIMIZER_MODE_PRICE_DRIVEN;
                                 EVLOG(debug) << "switched to \"price_driven\" optimizer mode";
+                            } else if (mode == EVSE_OPTIMIZER_MODE_FULL_AUTONOMY) {
+                                _optimizer_mode = EVSE_OPTIMIZER_MODE_FULL_AUTONOMY;
+                                EVLOG(debug) << "switched to \"full_autonomy\" optimizer mode";
                             } else {
                                 // error
                                 EVLOG(error) << "received unknown optimizer mode: " << mode;
@@ -168,7 +171,7 @@ void energyImpl::updateAndPublishEnergyObject() {
             {
                 std::lock_guard<std::mutex> lock(this->energy_mutex);
 
-                energy.at("optimizer_target").erase("price_limit");
+                energy.at("optimizer_target") = json::object();
                 energy.erase("optimizer_target");
 
                 EVLOG(debug) << " switched to manual_limits: removing price_limit";
@@ -190,6 +193,28 @@ void energyImpl::updateAndPublishEnergyObject() {
             std::lock_guard<std::mutex> lock(this->energy_mutex);
             energy["optimizer_target"] = json::object();
             energy["optimizer_target"]["price_limit"] = _price_limit;
+            if (energy.contains("schedule_import")) {
+                energy.at("schedule_import").at(0).at("request_parameters").at("ac_current_A").at("max_current_A") =
+                    mod->getLocalMaxCurrentLimit();
+            } else {
+                return;
+            }
+        }
+    } else if (_optimizer_mode == EVSE_OPTIMIZER_MODE_FULL_AUTONOMY) {
+        _price_limit = 0.0F;
+        if (energy.contains("optimizer_target")) {
+            // remove "price_limit" from energy object and switch current limit to manual
+            {
+                std::lock_guard<std::mutex> lock(this->energy_mutex);
+
+                energy.at("optimizer_target") = json::object();
+                energy["optimizer_target"]["full_autonomy"] = true;
+
+                EVLOG(debug) << " switched to full_autonomy: removing price_limit";
+            }
+        }
+        {
+            std::lock_guard<std::mutex> lock(this->energy_mutex);
             if (energy.contains("schedule_import")) {
                 energy.at("schedule_import").at(0).at("request_parameters").at("ac_current_A").at("max_current_A") =
                     mod->getLocalMaxCurrentLimit();

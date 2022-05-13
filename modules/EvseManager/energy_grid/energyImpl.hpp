@@ -64,6 +64,7 @@ private:
 // insert other definitions here
 #define EVSE_OPTIMIZER_MODE_MANUAL_LIMITS std::string("manual_limits")
 #define EVSE_OPTIMIZER_MODE_PRICE_DRIVEN  std::string("price_driven")
+#define EVSE_OPTIMIZER_MODE_FULL_AUTONOMY  std::string("full_autonomy")
 // ev@3d7da0ad-02c2-493d-9920-0bbbd56b9876:v1
 
 } // namespace energy_grid
