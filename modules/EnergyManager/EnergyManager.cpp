@@ -157,8 +157,6 @@ void EnergyManager::optimize_one_level(json& energy, json& optimized_values,
             // check if any children have price_limits set
             check_for_children_requesting_power(energy, current_price_per_kwh);
 
-            // EVLOG(critical) << "#############\n max_current_for_next_level_A (grid): " << max_current_for_next_level_A; // TODO(LAD): remove me
-
             scale_and_distribute_power(energy, max_current_for_next_level_A);
 
             // optimize each child
@@ -175,8 +173,6 @@ void EnergyManager::optimize_one_level(json& energy, json& optimized_values,
                 limits_import["request_parameters"] = json::object();
                 limits_import["request_parameters"]["ac_current_A"] = json::object();
                 limits_import["request_parameters"]["ac_current_A"]["current_A"] = max_current_for_next_level_A;
-
-                // EVLOG(critical) << "max_current_for_next_level_A (EVSE): " << max_current_for_next_level_A; // TODO(LAD): remove me
 
                 json result;
                 result["limits_import"] = limits_import;
@@ -524,10 +520,25 @@ void EnergyManager::scale_and_distribute_power(json& energy_object, double curre
                     if (child.at("requesting_power") == true) {
                         // if child is requesting power still, assign scaled_current
                         child["limit_from_parent"] = child.at("scaled_current");
-                    } else {
+                    } else if (child.contains("limit_from_parent") == false) {
                         // child is NOT requesting power, set limit to zero
                         child["limit_from_parent"] = 0;
                     }
+                }
+
+                // if still power available after hard requests have been assigned, give to children with surplus requests
+                if (sum_max_current_requests < current_limit_at_this_level) {
+                    double surplus_current_available = current_limit_at_this_level - sum_max_current_requests;
+
+                    for (json& child : energy_object["children"]) {
+                        if (child.contains("assign_surplus_power") && (child.at("assign_surplus_power") == true) ){
+                            child.at("requesting_power") = true;
+                        } else {
+                            child.at("requesting_power") = false;
+                        }
+                    }
+                    // re-run scale_and_distribute_power() with surplus energy
+                    scale_and_distribute_power(energy_object, surplus_current_available);
                 }
             }
 
