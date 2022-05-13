@@ -325,10 +325,10 @@ void EnergyManager::check_for_children_requesting_power(json& energy_object, con
                     child["requesting_power"] = true;
                 }
                 child["optimizer_target_is_set"] = true;
-                child["assign_surplus_power"] = true;
+                child["assign_surplus_power"] = true;   // also assign surplus power, as it is free
 
             } else if (child.at("optimizer_target").contains("full_autonomy")) {
-            // full_autonomy optimization
+            // full_autonomy optimization (= assign whenever there is surplus after everything else)
                 child["requesting_power"] = false;
                 child["assign_surplus_power"] = true;
 
