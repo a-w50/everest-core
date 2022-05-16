@@ -8,8 +8,7 @@
 cpp_module_setup()
 
 # ev@bcc62523-e22b-41d7-ba2f-825b493a3c97:v1
-add_subdirectory(yeti_comms)
-add_subdirectory(yeti_fwupdate)
+#add_subdirectory(yeti_fwupdate)
 
 list(APPEND ADDITIONAL_MODULE_INCLUDES
     "common"
@@ -19,7 +18,14 @@ list(APPEND ADDITIONAL_MODULE_INCLUDES
 )
 list(APPEND ADDITIONAL_MODULE_LIBS
     Pal::Sigslot
-    yeti_comms
+)
+list(APPEND ADDITIONAL_MODULE_SOURCES
+    "yeti_comms/evSerial.cpp"
+    "yeti_comms/protobuf/hi2lo.pb.c"
+    "yeti_comms/protobuf/lo2hi.pb.c"
+    "yeti_comms/nanopb/pb_decode.c"
+    "yeti_comms/nanopb/pb_encode.c"
+    "yeti_comms/nanopb/pb_common.c"
 )
 # ev@bcc62523-e22b-41d7-ba2f-825b493a3c97:v1
 

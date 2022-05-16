@@ -2,14 +2,62 @@
 // Copyright 2020 - 2021 Pionix GmbH and Contributors to EVerest
 #include "YetiDriver.hpp"
 
+#include <boost/algorithm/string.hpp>
+#include <iostream>
+#include <string>
+#include <vector>
+
 namespace module {
 
 void YetiDriver::init() {
+    sw_version_received = false;
+
     // initialize serial driver
     if (!serial.openDevice(config.serial_port.c_str(), config.baud_rate)) {
         EVLOG_AND_THROW(EVEXCEPTION(Everest::EverestConfigError, "Could not open serial port ", config.serial_port,
                                     " with baud rate ", config.baud_rate));
         return;
+    }
+
+    serial.run();
+    serial.signalKeepAliveLo.connect([this](KeepAliveLo s) {
+        //printf("Current Yeti SW Version: %s (Protocol %i.%0.2i)\n", s.sw_version_string, s.protocol_version_major,
+        //       s.protocol_version_minor);
+        currentYetiVersion = s.sw_version_string;
+        sw_version_received = true;
+    });
+    int timeout = 2 * 10;
+    while (true) {
+        if (sw_version_received)
+            break;
+        usleep(100);
+        if (timeout-- <= 0) {
+            EVLOG_AND_THROW(EVEXCEPTION(Everest::EverestInternalError, "Yeti timeout: Did not receive keep alive"));
+        }
+    }
+
+    // Check if version of update file is higher than currently installed version
+    if (fileExists() && compareVersionStrings(getVersionFromFile(), currentYetiVersion) == 1) {
+        // Update found that is newer than currently installed version, install it...
+        printf("\nRebooting Yeti in ROM Bootloader mode...\n");
+        // send some dummy commands to make sure protocol is in sync
+        serial.setMaxCurrent(6.);
+        serial.setMaxCurrent(6.);
+        // now reboot uC in boot loader mode
+        serial.firmwareUpdate(true);
+        serial.stop();
+        serial.closeDevice();
+
+        sleep(1);
+        char cmd[1000];
+        sprintf(cmd, "stm32flash -b 115200 %.100s -v -w %.100s -R", device, filename);
+        // sprintf(cmd, "stm32flash -b115200 %.100s", device);
+        printf("Executing %s ...\n", cmd);
+        system(cmd);
+
+        sleep(1);
+        serial.openDevice(config.serial_port.c_str(), config.baud_rate);
+        serial.run();
     }
 
     invoke_init(*p_powermeter);
@@ -28,7 +76,6 @@ void YetiDriver::init() {
 }
 
 void YetiDriver::ready() {
-    serial.run();
 
     if (!serial.reset()) {
         EVLOG_AND_THROW(EVEXCEPTION(Everest::EverestInternalError, "Yeti reset not successful."));
@@ -44,6 +91,72 @@ void YetiDriver::ready() {
     invoke_ready(*p_debug_keepalive);
     invoke_ready(*p_yeti_simulation_control);
     invoke_ready(*p_board_support);
+}
+
+/*
+ compares two version strings of the format
+ Major.Minor[-commits since tag], e.g. 0.4 with 0.4-3
+
+ returns:
+
+ -1 if v1<v2
+  0 if v1==v2
+ +1 if v1>v2
+
+ -2 on error (e.g. string not parsable)
+
+*/
+int YetiDriver::compareVersionStrings(const std::string& v1, const std::string& v2) {
+    unsigned int v1_major, v1_minor, v1_nrcommits;
+    unsigned int v2_major, v2_minor, v2_nrcommits;
+    if (parseVersion(v1, v1_major, v1_minor, v1_nrcommits) && parseVersion(v2, v2_major, v2_minor, v2_nrcommits)) {
+        if (v1_major < v2_major)
+            return -1;
+        if (v1_major > v2_major)
+            return 1;
+
+        if (v1_minor < v2_minor)
+            return -1;
+        if (v1_minor > v2_minor)
+            return 1;
+
+        if (v1_nrcommits < v2_nrcommits)
+            return -1;
+        if (v1_nrcommits > v2_nrcommits)
+            return 1;
+
+        return 0;
+
+    } else
+        return -2;
+}
+
+bool YetiDriver::parseVersion(const std::string& v, unsigned int& major, unsigned int& minor, unsigned int& nrcommits) {
+    std::vector<std::string> results;
+    boost::split(results, v, boost::is_any_of(".-"));
+
+    if (results.size() == 0)
+        return false;
+
+    if (results.size() >= 1) {
+        major = std::stoi(results[0]);
+    } else {
+        major = 0;
+    }
+
+    if (results.size() >= 2) {
+        minor = std::stoi(results[1]);
+    } else {
+        minor = 0;
+    }
+
+    if (results.size() >= 3) {
+        nrcommits = std::stoi(results[2]);
+    } else {
+        nrcommits = 0;
+    }
+
+    return true;
 }
 
 Everest::json power_meter_data_to_json(const PowerMeter& p) {

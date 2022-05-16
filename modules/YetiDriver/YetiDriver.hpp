@@ -78,6 +78,11 @@ private:
 
     // ev@211cfdbe-f69a-4cd6-a4ec-f8aaa3d1b6c8:v1
     // insert your private definitions here
+    bool sw_version_received;
+    std::string currentYetiVersion;
+    int compareVersionStrings(const std::string& v1, const std::string& v2);
+    bool parseVersion(const std::string& v, unsigned int& major, unsigned int& minor, unsigned int& nrcommits);
+
     // ev@211cfdbe-f69a-4cd6-a4ec-f8aaa3d1b6c8:v1
 };
 

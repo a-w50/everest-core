@@ -11,6 +11,7 @@
 #include "hi2lo.pb.h"
 #include <date/date.h>
 #include <date/tz.h>
+#include "utils/thread.hpp"
 
 class evSerial {
 
@@ -19,9 +20,11 @@ class evSerial {
     ~evSerial();
 
     bool openDevice(const char* device, int baud);
+    bool closeDevice();
 
     void readThread();
     void run();
+    void stop();
 
     void setMaxCurrent(float c);
     void setThreePhases(bool n);
@@ -77,8 +80,8 @@ class evSerial {
     uint32_t crc32(uint8_t *buf, int len);
 
     // Read thread for serial port
-    evThread readThreadHandle;
-    evThread timeoutDetectionThreadHandle;
+    Everest::Thread readThreadHandle;
+    Everest::Thread timeoutDetectionThreadHandle;
 
     bool linkWrite(HiToLo *m);
     volatile bool reset_done_flag;
