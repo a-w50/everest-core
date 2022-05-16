@@ -202,17 +202,16 @@ void energyImpl::updateAndPublishEnergyObject() {
         }
     } else if (_optimizer_mode == EVSE_OPTIMIZER_MODE_FULL_AUTONOMY) {
         _price_limit = 0.0F;
-        if (energy.contains("optimizer_target")) {
-            // remove "price_limit" from energy object and switch current limit to manual
-            {
-                std::lock_guard<std::mutex> lock(this->energy_mutex);
+        
+        {
+            std::lock_guard<std::mutex> lock(this->energy_mutex);
+            
+            energy["optimizer_target"] = json::object();
+            energy["optimizer_target"]["full_autonomy"] = true;
 
-                energy.at("optimizer_target") = json::object();
-                energy["optimizer_target"]["full_autonomy"] = true;
-
-                EVLOG(debug) << " switched to full_autonomy: removing price_limit";
-            }
+            EVLOG(debug) << " switched to full_autonomy";
         }
+        
         {
             std::lock_guard<std::mutex> lock(this->energy_mutex);
             if (energy.contains("schedule_import")) {
