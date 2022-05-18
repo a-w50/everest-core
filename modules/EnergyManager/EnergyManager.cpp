@@ -249,7 +249,7 @@ void EnergyManager::sanitize_object(json& obj_to_sanitize) {
 
 double EnergyManager::get_current_limit_from_energy_object( const json& sources_list_object, 
                                                             const json& energy_object, 
-                                                            const std::chrono::system_clock::time_point timepoint_now) {
+                                                            const std::chrono::time_point<date::utc_clock> timepoint_now) {
     bool sources_list_object_is_complete_flag = false;
     // set current limit to absolute maximum
     double max_current_A = ENERGY_MANAGER_ABSOLUTE_MAX_CURRENT;
