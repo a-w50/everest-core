@@ -18,6 +18,7 @@ list(APPEND EVEREST_MODULES_LIST
     JsPN532TokenProvider
     JsRiseV2G
     JsTibber
+    JsTibberSimulator
     JsYetiSimulator
     ModbusMeter
     ModbusMeterSimulator
