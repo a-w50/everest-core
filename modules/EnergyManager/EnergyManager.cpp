@@ -425,8 +425,7 @@ void EnergyManager::scale_and_distribute_power(json& energy_object, double curre
 
             // divide maximum current available to this level by sum of current requests
             if (energy_object.contains("schedule_import") &&
-                !energy_object["schedule_import"]
-                     .is_null()) { // need "[]" to prevent nlohmann error 304: cannot use at() with null
+                !energy_object["schedule_import"].is_null()) { // need "[]" to prevent nlohmann error 304: cannot use at() with null
 
                 current_scaling_factor = current_limit_at_this_level / sum_max_current_requests;
 
