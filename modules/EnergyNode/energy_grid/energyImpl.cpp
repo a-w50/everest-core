@@ -28,9 +28,9 @@ void energyImpl::init() {
     {
        std::lock_guard<std::mutex> lock(this->energy_mutex);
        json schedule_entry;
-       std::chrono::time_point<date::utc_clock> nw = date::utc_clock::now();
-       std::string nws = to_rfc3339(nw);
-       schedule_entry["timestamp"] = nws;
+       std::chrono::time_point<date::utc_clock> timepoint_now = date::utc_clock::now();
+       std::string timepoint_now_string = to_rfc3339(timepoint_now);
+       schedule_entry["timestamp"] = timepoint_now_string;
        schedule_entry["request_parameters"] = json::object();
        schedule_entry["request_parameters"]["limit_type"] = "Hard";
        schedule_entry["request_parameters"]["ac_current_A"] = json::object();
@@ -110,7 +110,10 @@ void energyImpl::init() {
     for (auto& entry : mod->r_price_information) {
         entry->subscribe_energy_price_schedule([this](json p) {
             EVLOG(debug) << "Incoming price schedule: " << p;
-            energy_price = p;
+            {
+                std::lock_guard<std::mutex> lock(this->energy_price_mutex);
+                energy_price = p;
+            }
             publish_complete_energy_object();
         });
     }
@@ -155,50 +158,68 @@ json energyImpl::merge_price_into_schedule(json schedule, json price) {
     else if (price.is_null())
         return schedule;
 
-    auto it_schedule = schedule.begin();
-    auto it_price = price.begin();
+    try {
+        auto it_schedule = schedule.begin();
+        auto it_price = price.begin();
 
-    json joined_array = json::array();
-    // The first element is already valid now even if the timestamp is in the future (per agreement)
-    json next_entry_schedule = *it_schedule;
-    json next_entry_price = *it_price;
-    json currently_valid_entry_schedule = next_entry_schedule;
-    json currently_valid_entry_price = next_entry_price;
+        json joined_array = json::array();
+        // The first element is already valid now even if the timestamp is in the future (per agreement)
+        json next_entry_schedule = *it_schedule;
+        json next_entry_price = *it_price;
+        json currently_valid_entry_schedule = next_entry_schedule;
+        json currently_valid_entry_price = next_entry_price;
 
-    while (true) {
-        if (it_schedule == schedule.end() && it_price == price.end())
-            break;
-
-        auto tp_schedule = from_rfc3339(next_entry_schedule["timestamp"]);
-        auto tp_price = from_rfc3339(next_entry_price["timestamp"]);
-
-        if (tp_schedule < tp_price && it_schedule != schedule.end() || it_price == price.end()) {
-            currently_valid_entry_schedule = next_entry_schedule;
-            json joined_entry = currently_valid_entry_schedule;
-
-            joined_entry["price_per_kwh"] = currently_valid_entry_price["price_per_kwh"];
-            joined_array.push_back(joined_entry);
-            it_schedule++;
-            if (it_schedule != schedule.end()) {
-                next_entry_schedule = *it_schedule;
+        while (true) {
+            if (it_schedule == schedule.end() && it_price == price.end()) {
+                break;
             }
-            continue;
-        }
-        if (tp_price < tp_schedule && it_price != price.end() || it_schedule == schedule.end()) {
-            currently_valid_entry_price = next_entry_price;
-            json joined_entry = currently_valid_entry_schedule;
-            joined_entry["price_per_kwh"] = currently_valid_entry_price["price_per_kwh"];
-            joined_entry["timestamp"] = currently_valid_entry_price["timestamp"];
-            joined_array.push_back(joined_entry);
-            it_price++;
-            if (it_price != price.end()) {
-                next_entry_price = *it_price;
-            }
-            continue;
-        }
-    }
 
-    return joined_array;
+            if ( (next_entry_schedule.contains("timestamp") == false) || (next_entry_price.contains("timestamp") == false) ){
+                EVLOG(error) << "Element \"timestamp\" not available in schedule! Aborting...";
+                return json({});
+            }
+            auto tp_schedule = from_rfc3339(next_entry_schedule["timestamp"]);
+            auto tp_price = from_rfc3339(next_entry_price["timestamp"]);
+
+            if (tp_schedule < tp_price && it_schedule != schedule.end() || it_price == price.end()) {
+                currently_valid_entry_schedule = next_entry_schedule;
+                json joined_entry = currently_valid_entry_schedule;
+
+                if (currently_valid_entry_price.contains("price_per_kwh") == false) {
+                    EVLOG(error) << "Element \"price_per_kwh\" not available in schedule! Aborting...";
+                    return json({});
+                }
+                joined_entry["price_per_kwh"] = currently_valid_entry_price["price_per_kwh"];
+                joined_array.push_back(joined_entry);
+                it_schedule++;
+                if (it_schedule != schedule.end()) {
+                    next_entry_schedule = *it_schedule;
+                }
+                continue;
+            }
+            if (tp_price < tp_schedule && it_price != price.end() || it_schedule == schedule.end()) {
+                currently_valid_entry_price = next_entry_price;
+                json joined_entry = currently_valid_entry_schedule;
+                if ( (currently_valid_entry_price.contains("price_per_kwh") == false) || (currently_valid_entry_price.contains("timestamp") == false) ) {
+                    EVLOG(error) << "Element \"currently_valid_entry_price\" incomplete! Aborting...";
+                    return json({});
+                }
+                joined_entry["price_per_kwh"] = currently_valid_entry_price["price_per_kwh"];
+                joined_entry["timestamp"] = currently_valid_entry_price["timestamp"];
+                joined_array.push_back(joined_entry);
+                it_price++;
+                if (it_price != price.end()) {
+                    next_entry_price = *it_price;
+                }
+                continue;
+            }
+        }
+
+        return joined_array;
+
+    } catch (const std::exception& ex) {
+        EVLOG(error) << "Cannot merge price into schedule: Exception occurred: " << ex.what();
+    }    
 }
 
 void energyImpl::ready() {

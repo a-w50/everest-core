@@ -50,6 +50,7 @@ private:
 
     // ev@3370e4dd-95f4-47a9-aaec-ea76f34a66c9:v1
     std::mutex energy_mutex;
+    std::mutex energy_price_mutex;
     // contains our own data and children
     json energy;
     // contains only the pricing informations last update
