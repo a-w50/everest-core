@@ -81,6 +81,7 @@ private:
     bool sw_version_received;
     std::string currentYetiVersion;
     int compareVersionStrings(const std::string& v1, const std::string& v2);
+    std::string getVersionFromFile(const std::string& fn);
     bool parseVersion(const std::string& v, unsigned int& major, unsigned int& minor, unsigned int& nrcommits);
 
     // ev@211cfdbe-f69a-4cd6-a4ec-f8aaa3d1b6c8:v1

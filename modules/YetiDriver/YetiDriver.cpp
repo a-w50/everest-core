@@ -21,8 +21,8 @@ void YetiDriver::init() {
 
     serial.run();
     serial.signalKeepAliveLo.connect([this](KeepAliveLo s) {
-        //printf("Current Yeti SW Version: %s (Protocol %i.%0.2i)\n", s.sw_version_string, s.protocol_version_major,
-        //       s.protocol_version_minor);
+        // printf("Current Yeti SW Version: %s (Protocol %i.%0.2i)\n", s.sw_version_string, s.protocol_version_major,
+        //        s.protocol_version_minor);
         currentYetiVersion = s.sw_version_string;
         sw_version_received = true;
     });
@@ -36,28 +36,56 @@ void YetiDriver::init() {
         }
     }
 
-    // Check if version of update file is higher than currently installed version
-    if (fileExists() && compareVersionStrings(getVersionFromFile(), currentYetiVersion) == 1) {
-        // Update found that is newer than currently installed version, install it...
-        printf("\nRebooting Yeti in ROM Bootloader mode...\n");
-        // send some dummy commands to make sure protocol is in sync
-        serial.setMaxCurrent(6.);
-        serial.setMaxCurrent(6.);
-        // now reboot uC in boot loader mode
-        serial.firmwareUpdate(true);
-        serial.stop();
-        serial.closeDevice();
+    std::string fw_file_name;
 
-        sleep(1);
-        char cmd[1000];
-        sprintf(cmd, "stm32flash -b 115200 %.100s -v -w %.100s -R", device, filename);
-        // sprintf(cmd, "stm32flash -b115200 %.100s", device);
-        printf("Executing %s ...\n", cmd);
-        system(cmd);
+    // check if we have a bundled firmware file
+    boost::filesystem::directory_iterator end_directory;
 
-        sleep(1);
-        serial.openDevice(config.serial_port.c_str(), config.baud_rate);
-        serial.run();
+    for (boost::filesystem::directory_iterator i("firmware/"); i != end_directory; i++) {
+        // Skip if not a file
+        if (!boost::filesystem::is_regular_file(i->status()))
+            continue;
+
+        // use first file with bin at the end
+        std::string fn = i->path().filename().string();
+        if (fn.size() > 3) {
+            fw_file_name = fn.substr(fn.size() - 3);
+            break;
+        }
+    }
+
+    // FIXME verify signature here etc
+
+    std::string availableYetiVersion = getVersionFromFile(fw_file_name);
+
+    if (availableYetiVersion.empty()) {
+        EVLOG(info) << "Cannot parse version from filename " << fw_file_name;
+    } else {
+        EVLOG(info) << "Bundled YetiFW version " << availableYetiVersion;
+
+        // Check if version of update file is higher than currently installed version
+        if (compareVersionStrings(availableYetiVersion, currentYetiVersion) == 1) {
+            EVLOG(info) << "Currently installed: " << currentYetiVersion << " - Installing " << availableYetiVersion;
+            // Update found that is newer than currently installed version, install it...
+            // send some dummy commands to make sure protocol is in sync
+            serial.setMaxCurrent(6.);
+            serial.setMaxCurrent(6.);
+            // now reboot uC in boot loader mode
+            serial.firmwareUpdate(true);
+            serial.stop();
+            serial.closeDevice();
+
+            sleep(1);
+            char cmd[1000];
+            sprintf(cmd, "stm32flash -b 115200 %.100s -v -w %.100s -R", config.serial_port.c_str(), fw_file_name);
+            system(cmd);
+
+            sleep(1);
+            serial.openDevice(config.serial_port.c_str(), config.baud_rate);
+            serial.run();
+        } else {
+            EVLOG(info) << "The same version is already installed on the Yeti Board.";
+        }
     }
 
     invoke_init(*p_powermeter);
@@ -91,6 +119,15 @@ void YetiDriver::ready() {
     invoke_ready(*p_debug_keepalive);
     invoke_ready(*p_yeti_simulation_control);
     invoke_ready(*p_board_support);
+}
+
+std::string YetiDriver::getVersionFromFile(const std::string& fn) {
+    std::vector<std::string> results;
+    boost::split(results, fn, boost::is_any_of("_"));
+    if (results.size() >= 2) {
+        return results[1];
+    } else
+        return std::string();
 }
 
 /*
