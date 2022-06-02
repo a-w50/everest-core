@@ -77,19 +77,7 @@ void energyImpl::init() {
 }
 
 void energyImpl::ready() {
-    json hw_caps = mod->get_hw_capabilities();
-    json schedule_entry = json::object();
-    schedule_entry["timestamp"] = to_rfc3339(date::utc_clock::now());
-    schedule_entry["request_parameters"] = json::object();
-    schedule_entry["request_parameters"]["limit_type"] = "Hard";
-    schedule_entry["request_parameters"]["ac_current_A"] = json::object();
-    schedule_entry["request_parameters"]["ac_current_A"] = hw_caps;
-
-    {
-        std::lock_guard<std::mutex> lock(this->energy_mutex);
-        energy["schedule_import"] = json::array({});
-        energy["schedule_import"].push_back(schedule_entry);
-    }
+    updateEnergyObjectScheduleImport();
 }
 
 void energyImpl::handle_enforce_limits(std::string& uuid, Object& limits_import, Object& limits_export,
@@ -174,15 +162,7 @@ void energyImpl::updateAndPublishEnergyObject() {
                 EVLOG(debug) << " switched to manual_limits: removing price_limit";
             }
         }
-        {
-            std::lock_guard<std::mutex> lock(this->energy_mutex);
-            if (energy.contains("schedule_import")) {
-                energy.at("schedule_import").at(0).at("request_parameters").at("ac_current_A").at("max_current_A") =
-                    mod->getLocalMaxCurrentLimit();
-            } else {
-                return;
-            }
-        }
+        updateEnergyObjectScheduleImport();
     } else if (_optimizer_mode == EVSE_OPTIMIZER_MODE_PRICE_DRIVEN) {
         _price_limit = _price_limit_previous_value;
         {
@@ -190,17 +170,46 @@ void energyImpl::updateAndPublishEnergyObject() {
             std::lock_guard<std::mutex> lock(this->energy_mutex);
             energy["optimizer_target"] = json::object();
             energy["optimizer_target"]["price_limit"] = _price_limit;
-            if (energy.contains("schedule_import")) {
-                energy.at("schedule_import").at(0).at("request_parameters").at("ac_current_A").at("max_current_A") =
-                    mod->getLocalMaxCurrentLimit();
-            } else {
-                return;
-            }
         }
+        updateEnergyObjectScheduleImport();
+        
     }
 
     // publish to energy tree
     publish_energy(energy);
+}
+
+void energyImpl::updateEnergyObjectScheduleImport() {
+    {
+        std::lock_guard<std::mutex> lock(this->energy_mutex);
+        json hw_caps = mod->get_hw_capabilities();
+
+        if (energy.contains("schedule_import")) {
+            if (!energy.at("schedule_import").is_null()) {
+                if (energy.at("schedule_import").at(0).contains("request_parameters")) {
+                    if (energy.at("schedule_import").at(0).at("request_parameters").contains("ac_current_A")) {
+                        energy.at("schedule_import").at(0).at("request_parameters").at("ac_current_A") = hw_caps;
+                        energy.at("schedule_import").at(0).at("request_parameters").at("ac_current_A").at("max_current_A") = mod->getLocalMaxCurrentLimit();
+                    }
+                }
+                if (energy.at("schedule_import").at(0).contains("timestamp")) {
+                    energy.at("schedule_import").at(0).at("timestamp") = to_rfc3339(date::utc_clock::now());
+                } else {
+                    energy.at("schedule_import").at(0)["timestamp"] = to_rfc3339(date::utc_clock::now());
+                }
+            }
+        } else {
+            json schedule_entry = json::object();
+            schedule_entry["timestamp"] = to_rfc3339(date::utc_clock::now());
+            schedule_entry["request_parameters"] = json::object();
+            schedule_entry["request_parameters"]["limit_type"] = "Hard";
+            schedule_entry["request_parameters"]["ac_current_A"] = json::object();
+            schedule_entry["request_parameters"]["ac_current_A"] = hw_caps;
+
+            energy["schedule_import"] = json::array({});
+            energy["schedule_import"].push_back(schedule_entry);
+        }
+    }
 }
 
 } // namespace energy_grid
