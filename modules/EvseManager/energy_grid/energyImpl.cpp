@@ -185,7 +185,7 @@ void energyImpl::updateEnergyObjectScheduleImport() {
         json hw_caps = mod->get_hw_capabilities();
         if (hw_caps.is_null()) {
             // set defaults if bsp module not yet ready
-            json hw_caps = json::object();
+            hw_caps = json::object();
             hw_caps["max_current_A"] = 16.0F;
             hw_caps["min_current_A"] = 6.0F;
             hw_caps["max_phase_count"] = 1;
