@@ -186,8 +186,8 @@ void energyImpl::updateEnergyObjectScheduleImport() {
         if (hw_caps.is_null()) {
             // set defaults if bsp module not yet ready
             json hw_caps = json::object();
-            hw_caps["max_current_A"] =  mod->config.max_current;
-            hw_caps["min_current_A"] = 6.0;
+            hw_caps["max_current_A"] = 16.0F;
+            hw_caps["min_current_A"] = 6.0F;
             hw_caps["max_phase_count"] = 1;
             hw_caps["min_phase_count"] = 1;
             hw_caps["supports_changing_phases_during_charging"] = false;
