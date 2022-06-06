@@ -1,145 +1,483 @@
 {
-    "iso15118_charger": {
-        "module": "JsRiseV2G",
-        "config_implementation": {
-            "main": {
-                "mqtt_base_path": "everest_external/iso15118/java"
-            }
+  "api": {
+    "connections": {
+      "evse_manager": [
+        {
+          "implementation_id": "evse",
+          "module_id": "evse_manager"
         }
+      ]
     },
-    "evse_manager": {
-        "module": "EvseManager",
-        "config_module": {
-            "three_phases": true,
-            "has_ventilation": true,
-            "country_code": "DE",
-            "rcd_enabled": true,
-            "evse_id": "1"
-        },
-        "connections": {
-            "bsp": [
-                {
-                    "module_id": "yeti_driver",
-                    "implementation_id": "board_support"
-                }
-            ],
-            "powermeter": [
-                {
-                    "module_id": "yeti_driver",
-                    "implementation_id": "powermeter"
-                }
-            ],
-            "auth": [
-                {
-                    "module_id": "auth",
-                    "implementation_id": "main"
-                }
-            ]
-        }
-    },
-    "yeti_driver": {
-        "module": "JsYetiSimulator"
-    },
-    "car_simulator": {
-        "module": "JsCarSimulator",
-        "connections": {
-            "simulation_control": [
-                {
-                    "module_id": "yeti_driver",
-                    "implementation_id": "yeti_simulation_control"
-                }
-            ]
-        }
-    },
-    "auth": {
-        "module": "JsAuth",
-        "connections": {
-            "tokenProvider": [
-                {
-                    "module_id": "token_provider_1",
-                    "implementation_id": "main"
-                }
-            ],
-            "tokenValidator": [
-                {
-                    "module_id": "token_validator",
-                    "implementation_id": "main"
-                }
-            ]
-        }
-    },
-    "token_provider_1": {
-        "module": "JsDummyTokenProvider",
-        "connections": {
-            "evse": [
-                {
-                    "module_id": "evse_manager",
-                    "implementation_id": "evse"
-                }
-            ]
-        },
-        "config_implementation": {
-            "main": {
-                "type": "dummy"
-            }
-        }
-    },
-    "token_validator": {
-        "module": "JsDummyTokenValidator",
-        "config_implementation": {
-            "main": {
-                "validation_result": "Accepted",
-                "validation_reason": "Token seems valid",
-                "sleep": 0.25
-            }
-        }
-    },
-    "energy_manager": {
-        "module": "EnergyManager",
-        "connections": {
-            "energy_trunk": [
-                {
-                    "module_id": "grid_connection_point",
-                    "implementation_id": "energy_grid"
-                }
-            ]
-        }
-    },
-    "grid_connection_point": {
-        "module": "EnergyNode",
-        "config_module": {
-            "fuse_limit_A": 63.0,
-            "phase_count": 3
-        },
-        "connections": {
-            "price_information": [
-            ],
-            "energy_consumer": [
-                {
-                    "module_id": "evse_manager",
-                    "implementation_id": "energy_grid"
-                }
-            ],
-            "powermeter": [ 
-                {
-                    "module_id": "yeti_driver",
-                    "implementation_id": "powermeter"
-                }
-            ]
-        }
-    },
-    "api": {
-        "module": "API",
-        "connections": {
-            "evse_manager": [
-                {
-                    "module_id": "evse_manager",
-                    "implementation_id": "evse"
-                }
-            ]
-        }
-    },
-    "setup": {
-        "module": "Setup"
+    "module": "API",
+    "x-view-model": {
+      "position": {
+        "x": 28,
+        "y": 11
+      },
+      "terminals": {
+        "bottom": [],
+        "left": [
+          {
+            "id": "evse_manager",
+            "interface": "evse_manager",
+            "type": "requirement"
+          }
+        ],
+        "right": [
+          {
+            "id": "main",
+            "interface": "empty",
+            "type": "provide"
+          }
+        ],
+        "top": []
+      }
     }
+  },
+  "auth": {
+    "connections": {
+      "tokenProvider": [
+        {
+          "implementation_id": "main",
+          "module_id": "token_provider_1"
+        }
+      ],
+      "tokenValidator": [
+        {
+          "implementation_id": "main",
+          "module_id": "token_validator"
+        }
+      ]
+    },
+    "module": "JsAuth",
+    "x-view-model": {
+      "position": {
+        "x": 9,
+        "y": -1
+      },
+      "terminals": {
+        "bottom": [
+          {
+            "id": "main",
+            "interface": "auth",
+            "type": "provide"
+          }
+        ],
+        "left": [],
+        "right": [
+          {
+            "id": "tokenValidator",
+            "interface": "auth_token_validator",
+            "type": "requirement"
+          },
+          {
+            "id": "tokenProvider",
+            "interface": "auth_token_provider",
+            "type": "requirement"
+          }
+        ],
+        "top": []
+      }
+    }
+  },
+  "car_simulator": {
+    "connections": {
+      "simulation_control": [
+        {
+          "implementation_id": "yeti_simulation_control",
+          "module_id": "yeti_driver"
+        }
+      ]
+    },
+    "module": "JsCarSimulator",
+    "x-view-model": {
+      "position": {
+        "x": -23,
+        "y": 21
+      },
+      "terminals": {
+        "bottom": [],
+        "left": [
+          {
+            "id": "main",
+            "interface": "car_simulator",
+            "type": "provide"
+          }
+        ],
+        "right": [
+          {
+            "id": "simulation_control",
+            "interface": "yeti_simulation_control",
+            "type": "requirement"
+          }
+        ],
+        "top": []
+      }
+    }
+  },
+  "energy_manager": {
+    "connections": {
+      "energy_trunk": [
+        {
+          "implementation_id": "energy_grid",
+          "module_id": "grid_connection_point"
+        }
+      ]
+    },
+    "module": "EnergyManager",
+    "x-view-model": {
+      "position": {
+        "x": 40,
+        "y": 21
+      },
+      "terminals": {
+        "bottom": [],
+        "left": [
+          {
+            "id": "energy_trunk",
+            "interface": "energy",
+            "type": "requirement"
+          }
+        ],
+        "right": [
+          {
+            "id": "main",
+            "interface": "energy_manager",
+            "type": "provide"
+          }
+        ],
+        "top": []
+      }
+    }
+  },
+  "evse_manager": {
+    "config_module": {
+      "ac_enforce_hlc": false,
+      "ac_hlc_enabled": false,
+      "ac_hlc_use_5percent": false,
+      "charge_mode": "AC",
+      "country_code": "DE",
+      "evse_id": "1",
+      "has_ventilation": true,
+      "max_current": 32,
+      "rcd_enabled": true,
+      "three_phases": true
+    },
+    "connections": {
+      "auth": [
+        {
+          "implementation_id": "main",
+          "module_id": "auth"
+        }
+      ],
+      "bsp": [
+        {
+          "implementation_id": "board_support",
+          "module_id": "yeti_driver"
+        }
+      ],
+      "powermeter": [
+        {
+          "implementation_id": "powermeter",
+          "module_id": "yeti_driver"
+        }
+      ]
+    },
+    "module": "EvseManager",
+    "x-view-model": {
+      "position": {
+        "x": 9,
+        "y": 11
+      },
+      "terminals": {
+        "bottom": [
+          {
+            "id": "bsp",
+            "interface": "board_support_AC",
+            "type": "requirement"
+          },
+          {
+            "id": "powermeter",
+            "interface": "powermeter",
+            "type": "requirement"
+          },
+          {
+            "id": "energy_grid",
+            "interface": "energy",
+            "type": "provide"
+          }
+        ],
+        "left": [
+          {
+            "id": "hlc",
+            "interface": "ISO15118_ac_charger",
+            "type": "requirement"
+          },
+          {
+            "id": "slac",
+            "interface": "slac",
+            "type": "requirement"
+          }
+        ],
+        "right": [
+          {
+            "id": "evse",
+            "interface": "evse_manager",
+            "type": "provide"
+          }
+        ],
+        "top": [
+          {
+            "id": "auth",
+            "interface": "auth",
+            "type": "requirement"
+          }
+        ]
+      }
+    }
+  },
+  "grid_connection_point": {
+    "config_module": {
+      "fuse_limit_A": 63,
+      "phase_count": 2
+    },
+    "connections": {
+      "energy_consumer": [
+        {
+          "implementation_id": "energy_grid",
+          "module_id": "evse_manager"
+        }
+      ],
+      "powermeter": [
+        {
+          "implementation_id": "powermeter",
+          "module_id": "yeti_driver"
+        }
+      ]
+    },
+    "module": "EnergyNode",
+    "x-view-model": {
+      "position": {
+        "x": 23,
+        "y": 21
+      },
+      "terminals": {
+        "bottom": [
+          {
+            "id": "price_information",
+            "interface": "energy_price_information",
+            "type": "requirement"
+          }
+        ],
+        "left": [
+          {
+            "id": "energy_consumer",
+            "interface": "energy",
+            "type": "requirement"
+          },
+          {
+            "id": "powermeter",
+            "interface": "powermeter",
+            "type": "requirement"
+          }
+        ],
+        "right": [
+          {
+            "id": "energy_grid",
+            "interface": "energy",
+            "type": "provide"
+          }
+        ],
+        "top": []
+      }
+    }
+  },
+  "iso15118_charger": {
+    "config_implementation": {
+      "main": {
+        "mqtt_base_path": "everest_external/iso15118/javax"
+      }
+    },
+    "connections": {},
+    "module": "JsRiseV2G",
+    "x-view-model": {
+      "position": {
+        "x": -16,
+        "y": 2
+      },
+      "terminals": {
+        "bottom": [],
+        "left": [],
+        "right": [
+          {
+            "id": "ac_charger",
+            "interface": "ISO15118_ac_charger",
+            "type": "provide"
+          },
+          {
+            "id": "dc_charger",
+            "interface": "ISO15118_dc_charger",
+            "type": "provide"
+          },
+          {
+            "id": "main",
+            "interface": "empty",
+            "type": "provide"
+          }
+        ],
+        "top": []
+      }
+    }
+  },
+  "setup": {
+    "connections": {},
+    "module": "Setup",
+    "x-view-model": {
+      "position": {
+        "x": -16,
+        "y": -5
+      },
+      "terminals": {
+        "bottom": [],
+        "left": [],
+        "right": [
+          {
+            "id": "main",
+            "interface": "empty",
+            "type": "provide"
+          }
+        ],
+        "top": []
+      }
+    }
+  },
+  "token_provider_1": {
+    "config_implementation": {
+      "main": {
+        "timeout": 10,
+        "token": "DEADBEEF",
+        "type": "dummy"
+      }
+    },
+    "connections": {
+      "evse": [
+        {
+          "implementation_id": "evse",
+          "module_id": "evse_manager"
+        }
+      ]
+    },
+    "module": "JsDummyTokenProvider",
+    "x-view-model": {
+      "position": {
+        "x": 28,
+        "y": 2
+      },
+      "terminals": {
+        "bottom": [],
+        "left": [
+          {
+            "id": "main",
+            "interface": "auth_token_provider",
+            "type": "provide"
+          },
+          {
+            "id": "evse",
+            "interface": "evse_manager",
+            "type": "requirement"
+          }
+        ],
+        "right": [],
+        "top": []
+      }
+    }
+  },
+  "token_validator": {
+    "config_implementation": {
+      "main": {
+        "sleep": 0.25,
+        "validation_reason": "Token seems valid",
+        "validation_result": "Accepted"
+      }
+    },
+    "connections": {},
+    "module": "JsDummyTokenValidator",
+    "x-view-model": {
+      "position": {
+        "x": 20,
+        "y": -10
+      },
+      "terminals": {
+        "bottom": [
+          {
+            "id": "main",
+            "interface": "auth_token_validator",
+            "type": "provide"
+          }
+        ],
+        "left": [],
+        "right": [],
+        "top": []
+      }
+    }
+  },
+  "yeti_driver": {
+    "connections": {},
+    "module": "JsYetiSimulator",
+    "x-view-model": {
+      "position": {
+        "x": -7,
+        "y": 21
+      },
+      "terminals": {
+        "bottom": [
+          {
+            "id": "debug_keepalive",
+            "interface": "debug_json",
+            "type": "provide"
+          },
+          {
+            "id": "debug_yeti",
+            "interface": "debug_json",
+            "type": "provide"
+          },
+          {
+            "id": "yeti_extras",
+            "interface": "yeti_extras",
+            "type": "provide"
+          },
+          {
+            "id": "debug_powermeter",
+            "interface": "debug_json",
+            "type": "provide"
+          },
+          {
+            "id": "debug_state",
+            "interface": "debug_json",
+            "type": "provide"
+          }
+        ],
+        "left": [
+          {
+            "id": "yeti_simulation_control",
+            "interface": "yeti_simulation_control",
+            "type": "provide"
+          }
+        ],
+        "right": [
+          {
+            "id": "board_support",
+            "interface": "board_support_AC",
+            "type": "provide"
+          },
+          {
+            "id": "powermeter",
+            "interface": "powermeter",
+            "type": "provide"
+          }
+        ],
+        "top": []
+      }
+    }
+  }
 }
