@@ -667,6 +667,16 @@ Charger::EvseState Charger::getCurrentState() {
     return currentState;
 }
 
+bool Charger::Authorized_PnC() {
+    std::lock_guard<std::recursive_mutex> lock(configMutex);
+    return (authorized && authorized_pnc);
+}
+
+bool Charger::Authorized_EIM() {
+    std::lock_guard<std::recursive_mutex> lock(configMutex);
+    return (authorized && !authorized_pnc);
+}
+
 void Charger::Authorize(bool a, const std::string& userid, bool pnc) {
     std::lock_guard<std::recursive_mutex> lock(configMutex);
     authorized = a;

@@ -25,18 +25,17 @@
 
 #include "ld-ev.hpp"
 #include "utils/thread.hpp"
-#include <generated/board_support_AC/Interface.hpp>
 #include <chrono>
+#include <date/date.h>
+#include <date/tz.h>
+#include <generated/board_support_AC/Interface.hpp>
 #include <mutex>
 #include <queue>
 #include <sigslot/signal.hpp>
-#include <date/date.h>
-#include <date/tz.h>
 
 namespace module {
 
-enum class ControlPilotEvent
-{
+enum class ControlPilotEvent {
     CarPluggedIn,
     CarRequestedPower,
     PowerOn,
@@ -88,8 +87,9 @@ public:
 
     // call when in state WaitingForAuthentication
     void Authorize(bool a, const std::string& userid, bool pnc);
-    bool AuthorizedEIM();
-    bool AuthorizedPnC();
+
+    bool Authorized_PnC();
+    bool Authorized_EIM();
 
     // trigger replug sequence while charging to switch number of phases
     bool switchThreePhasesWhileCharging(bool n);
@@ -110,8 +110,7 @@ public:
 
     // Public states for Hi Level
 
-    enum class EvseEvent
-    {
+    enum class EvseEvent {
         Enabled,
         Disabled,
         SessionStarted,
@@ -161,8 +160,7 @@ public:
     // in the future.
     // Use new EvseEvent interface instead.
 
-    enum class EvseState
-    {
+    enum class EvseState {
         Disabled,
         Idle,
         WaitingForAuthentication,
@@ -196,6 +194,9 @@ private:
     std::chrono::time_point<date::utc_clock> maxCurrentValidUntil;
 
     bool powerAvailable();
+
+    bool AuthorizedEIM();
+    bool AuthorizedPnC();
 
     // This mutex locks all config type members
     std::recursive_mutex configMutex;

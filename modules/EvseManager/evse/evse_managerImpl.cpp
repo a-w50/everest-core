@@ -141,7 +141,6 @@ void evse_managerImpl::ready() {
 
             if (p.contains("energy_Wh_export") && p["energy_Wh_export"].contains("total"))
                 se["session_cancelled"]["energy_Wh_export"] = p["energy_Wh_export"]["total"];
-                
         }
 
         if (e == Charger::EvseEvent::Error) {
@@ -205,6 +204,8 @@ bool evse_managerImpl::handle_resume_charging() {
 };
 
 bool evse_managerImpl::handle_cancel_charging() {
+    if (mod->get_hlc_enabled())
+        mod->r_hlc[0]->call_stop_charging(true);
     return mod->charger->cancelCharging();
 };
 

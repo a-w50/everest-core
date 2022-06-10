@@ -23,7 +23,9 @@
             "has_ventilation": true,
             "country_code": "DE",
             "rcd_enabled": true,
-            "evse_id": "1"
+            "evse_id": "1",
+	    "ac_hlc_enabled": true,
+	    "ac_hlc_use_5percent": false
         },
         "connections": {
             "bsp": [
@@ -42,6 +44,12 @@
                 {
                     "module_id": "auth",
                     "implementation_id": "main"
+                }
+            ],
+            "hlc": [
+                {
+                    "module_id": "iso15118_charger",
+                    "implementation_id": "charger"
                 }
             ]
         }

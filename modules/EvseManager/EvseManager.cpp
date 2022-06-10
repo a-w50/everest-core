@@ -18,6 +18,9 @@ void EvseManager::init() {
     reserved = false;
     reservation_id = 0;
 
+    hlc_waiting_for_auth_eim = false;
+    hlc_waiting_for_auth_pnc = false;
+
     reservationThreadHandle = std::thread([this]() {
         while (true) {
             // check reservation status on regular intervals to see if it expires.
@@ -29,13 +32,86 @@ void EvseManager::init() {
 }
 
 void EvseManager::ready() {
-    if (hlc_enabled) {
-        r_hlc[0]->call_set_evseid(config.evse_id);
-        r_hlc[0]->call_set_evse_notification("None", 10);
-        r_hlc[0]->call_set_receipt_required(false);
-        r_hlc[0]->call_set_nominal_voltage(230);
-        r_hlc[0]->call_set_rcd(false);
-        r_hlc[0]->call_set_max_current(0);
+    if (get_hlc_enabled()) {
+
+        // Set up EVSE ID
+        r_hlc[0]->call_set_EVSEID(config.evse_id);
+
+        // Set up auth options for HLC
+        Array payment_options;
+        if (config.payment_enable_eim)
+            payment_options.insert(payment_options.end(), "ExternalPayment");
+        if (config.payment_enable_contract)
+            payment_options.insert(payment_options.end(), "Contract");
+        r_hlc[0]->call_set_PaymentOptions(payment_options);
+
+        // Set up energy transfer modes for HLC. For now we only support either DC or AC, not both at the same time.
+        Array transfer_modes;
+        if (config.charge_mode == "AC") {
+            r_hlc[0]->call_set_AC_EVSENominalVoltage(config.ac_nominal_voltage);
+
+            if (config.three_phases) {
+                transfer_modes.insert(transfer_modes.end(), "AC_three_phase_core");
+                transfer_modes.insert(transfer_modes.end(), "AC_single_phase_core");
+            } else {
+                transfer_modes.insert(transfer_modes.end(), "AC_single_phase_core");
+            }
+        } else if (config.charge_mode == "DC") {
+            transfer_modes.insert(transfer_modes.end(), "DC_core");
+            r_hlc[0]->call_set_DC_EVSECurrentRegulationTolerance(config.dc_current_regulation_tolerance);
+            r_hlc[0]->call_set_DC_EVSEPeakCurrentRipple(config.dc_peak_current_ripple);
+        } else {
+            EVLOG(error) << "Unsupported charging mode.";
+            exit(255);
+        }
+        r_hlc[0]->call_set_SupportedEnergyTransferMode(transfer_modes);
+
+        r_hlc[0]->call_set_ReceiptRequired(config.ev_receipt_required);
+
+        // We always go through the auth step with EIM even if it is free. This way EVerest auth manager has full
+        // control.
+        r_hlc[0]->call_set_FreeService(false);
+
+        // set up debug mode for HLC
+        r_hlc[0]->call_enable_debug_mode(config.debug_mode);
+
+        // reset error flags
+        r_hlc[0]->call_set_FAILED_ContactorError(false);
+        r_hlc[0]->call_set_RCD_Error(false);
+
+        // implement Auth handlers
+        r_hlc[0]->subscribe_Require_Auth_EIM([this]() {
+            // Do we have auth already (i.e. delayed HLC after charging already running)?
+            if (charger->Authorized_EIM()) {
+                r_hlc[0]->call_set_Auth_Okay_EIM(true);
+                reset_hlc_waiting_for_auth();
+            } else {
+                // we set a flag that HLC is waiting for auth.
+                // Once auth is granted from auth manager, we notify both charger and HLC
+                set_hlc_waiting_for_auth_eim();
+            }
+        });
+
+        r_hlc[0]->subscribe_Require_Auth_PnC([this]() {
+            // Do we have auth already (i.e. delayed HLC after charging already running)?
+            if (charger->Authorized_PnC()) {
+                r_hlc[0]->call_set_Auth_Okay_PnC(true);
+                reset_hlc_waiting_for_auth();
+            } else {
+                // we set a flag that HLC is waiting for auth.
+                // Once auth is granted from auth manager, we notify both charger and HLC
+                set_hlc_waiting_for_auth_pnc();
+            }
+        });
+
+        // Do not implement for now:
+        // set_EVSEEnergyToBeDelivered
+        // Require_EVSEIsolationCheck ignored for now
+        // AC_Close_Contactor/AC_Open_Contactor: we ignore these events, we still switch on/off with state C/D for now.
+        // May not work if PWM switch on comes before request through HLC, so implement soon!
+        // All DC stuff missing
+        // V2G_Setup_Finished is useful but ignored for now
+        // All other telemetry type info is ignored for now
     }
 
     hw_capabilities = r_bsp->call_get_hw_capabilities();
@@ -60,6 +136,45 @@ void EvseManager::ready() {
     r_bsp->subscribe_event([this](std::string event) {
         charger->processEvent(event);
 
+        // Forward some events to HLC
+        if (get_hlc_enabled()) {
+            // Reset HLC auth waiting flags on new session
+            if (event == "CarPluggedIn") {
+                reset_hlc_waiting_for_auth();
+
+                r_hlc[0]->call_set_FAILED_ContactorError(false);
+                r_hlc[0]->call_set_RCD_Error(false);
+                r_hlc[0]->call_set_EVSE_Malfunction(false);
+                r_hlc[0]->call_set_EVSE_EmergencyShutdown(false);
+                r_hlc[0]->call_contactor_open(true);
+                r_hlc[0]->call_stop_charging(false);
+            }
+
+            if (event == "ErrorRelais") {
+                r_hlc[0]->call_set_FAILED_ContactorError(true);
+            }
+
+            if (event == "ErrorRCD") {
+                r_hlc[0]->call_set_RCD_Error(true);
+            }
+
+            if (event == "PermanentFault") {
+                r_hlc[0]->call_set_EVSE_Malfunction(true);
+            }
+
+            if (event == "ErrorOverCurrent") {
+                r_hlc[0]->call_set_EVSE_EmergencyShutdown(true);
+            }
+
+            if (event == "PowerOn") {
+                r_hlc[0]->call_contactor_closed(true);
+            }
+
+            if (event == "PowerOff") {
+                r_hlc[0]->call_contactor_open(true);
+            }
+        }
+
         // Forward events from BSP to SLAC module
         if (slac_enabled) {
             if (event == "EnterBCD")
@@ -78,6 +193,10 @@ void EvseManager::ready() {
     r_powermeter->subscribe_powermeter([this](json p) {
         // Inform charger about current charging current. This is used for slow OC detection.
         charger->setCurrentDrawnByVehicle(p["current_A"]["L1"], p["current_A"]["L2"], p["current_A"]["L3"]);
+
+        // Inform HLC about the power meter data
+        if (get_hlc_enabled())
+            r_hlc[0]->call_set_MeterInfo(p);
 
         // Store local cache
         latest_powermeter_data = p;
@@ -103,7 +222,7 @@ void EvseManager::ready() {
             boost::variant<boost::blank, std::string> auth = r_auth->call_get_authorization();
             if (auth.which() == 1) {
                 // FIXME: This is currently only for EIM!
-                charger->Authorize(true, boost::get<std::string>(auth), false);
+                // charger->Authorize(true, boost::get<std::string>(auth), false);
                 const std::string& token = boost::get<std::string>(auth);
                 // we got an auth token, check if it matches our reservation
                 if (reserved_for_different_token(token)) {
@@ -114,7 +233,13 @@ void EvseManager::ready() {
                 } else {
                     // if reserved: signal to the outside world that this reservation ended because it is being used
                     use_reservation_to_start_charging();
+                    // notify charger about the authorization
                     charger->Authorize(true, token, false);
+                    // notify HLC if it was waiting for it as well
+                    if (get_hlc_waiting_for_auth_eim() && get_hlc_enabled())
+                        r_hlc[0]->call_set_Auth_Okay_EIM(true);
+                    reset_hlc_waiting_for_auth();
+                    // FIXME: PnC not supported here!
                 }
             }
         }
@@ -122,8 +247,8 @@ void EvseManager::ready() {
 
     charger->signalMaxCurrent.connect([this](float ampere) {
         // The charger changed the max current setting. Forward to HLC
-        if (hlc_enabled) {
-            r_hlc[0]->call_set_max_current(ampere);
+        if (get_hlc_enabled()) {
+            r_hlc[0]->call_set_AC_EVSEMaxCurrent(ampere);
         }
     });
 
@@ -217,7 +342,7 @@ std::string EvseManager::reserve_now(const int _reservation_id, const std::strin
 bool EvseManager::updateLocalMaxCurrentLimit(float max_current) {
     if (max_current >= 0.0F && max_current < EVSE_ABSOLUTE_MAX_CURRENT) {
         local_max_current_limit = max_current;
-        
+
         // wait for EnergyManager to assign optimized current on next opimizer run
 
         return true;
@@ -305,11 +430,42 @@ bool EvseManager::reserved_for_different_token(const std::string& token) {
 
     if (reserved_auth_token == token) {
         return false;
-    }
-    else
-    {
+    } else {
         return true;
     }
+}
+
+void EvseManager::reset_hlc_waiting_for_auth() {
+    std::lock_guard<std::mutex> lock(hlc_mutex);
+    hlc_waiting_for_auth_eim = false;
+    hlc_waiting_for_auth_pnc = false;
+}
+
+void EvseManager::set_hlc_waiting_for_auth_eim() {
+    std::lock_guard<std::mutex> lock(hlc_mutex);
+    hlc_waiting_for_auth_eim = true;
+    hlc_waiting_for_auth_pnc = false;
+}
+
+void EvseManager::set_hlc_waiting_for_auth_pnc() {
+    std::lock_guard<std::mutex> lock(hlc_mutex);
+    hlc_waiting_for_auth_eim = false;
+    hlc_waiting_for_auth_pnc = true;
+}
+
+bool EvseManager::get_hlc_waiting_for_auth_pnc() {
+    std::lock_guard<std::mutex> lock(hlc_mutex);
+    return hlc_waiting_for_auth_pnc;
+}
+
+bool EvseManager::get_hlc_waiting_for_auth_eim() {
+    std::lock_guard<std::mutex> lock(hlc_mutex);
+    return hlc_waiting_for_auth_eim;
+}
+
+bool EvseManager::get_hlc_enabled() {
+    std::lock_guard<std::mutex> lock(hlc_mutex);
+    return hlc_enabled;
 }
 
 } // namespace module

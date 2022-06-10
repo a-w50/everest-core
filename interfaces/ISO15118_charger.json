@@ -6,12 +6,11 @@
             "arguments": {
                 "EVSEID": {
                     "description": "EVSE ID",
-                    "type": "string",
-                    "pattern": "^[A-Z]{2}\\*[A-Z0-9]{3}\\*E[A-Z0-9][A-Z0-9\\*]{1,30}$"
+                    "type": "string"
                 }
             }
         },
-        "set_PaymentOptions":{
+        "set_PaymentOptions": {
             "description": "One Time Setup at Boot - Providing a list of payment options to the EVCC ",
             "arguments": {
                 "PaymentOptions": {
@@ -20,14 +19,17 @@
                     "items": {
                         "description": "These are the payment options an SECC offers to the EVCC",
                         "type": "string",
-                        "enum": ["Contract", "ExternalPayment"]
+                        "enum": [
+                            "Contract",
+                            "ExternalPayment"
+                        ]
                     },
                     "minItems": 1,
                     "maxItems": 2
                 }
             }
         },
-        "set_SupportedEnergyTransferMode":{
+        "set_SupportedEnergyTransferMode": {
             "description": "One Time Setup at Boot - Available energy transfer modes supported by the EVSE",
             "arguments": {
                 "SupportedEnergyTransferMode": {
@@ -36,13 +38,19 @@
                     "items": {
                         "description": "The single modes",
                         "type": "string",
-                        "enum": ["AC_single_phase_core", "AC_three_phase_core", "DC_core",
-                            "DC_extended", "DC_combo_core", "DC_unique"]
+                        "enum": [
+                            "AC_single_phase_core",
+                            "AC_three_phase_core",
+                            "DC_core",
+                            "DC_extended",
+                            "DC_combo_core",
+                            "DC_unique"
+                        ]
                     },
                     "minItems": 1,
                     "maxItems": 6
                 }
-            }  
+            }
         },
         "set_AC_EVSENominalVoltage": {
             "description": "One Time Setup at Boot - Set Line voltage supported by the EVSE. This is the voltage measured between one phases and neutral",
@@ -64,7 +72,7 @@
                     "minimum": 0,
                     "maximum": 400
                 }
-            }  
+            }
         },
         "set_DC_EVSEPeakCurrentRipple": {
             "description": "One Time Setup at Boot - Set the peak-to-peak magnitude of the current ripple of the EVSE",
@@ -112,7 +120,11 @@
                 "debug_mode": {
                     "description": "The various debug modes",
                     "type": "string",
-                    "enum": ["None", "Lite", "Full"]
+                    "enum": [
+                        "None",
+                        "Lite",
+                        "Full"
+                    ]
                 }
             }
         },
@@ -192,7 +204,7 @@
                     "minimum": 0,
                     "maximum": 400
                 }
-            } 
+            }
         },
         "set_DC_EVSEMaximumCurrentLimit": {
             "description": "ChargeParameterDiscovery and during charging - Set the maximum current for the EVSE",
@@ -212,7 +224,7 @@
                     "description": "[W] Maximum power the EVSE can deliver",
                     "type": "number",
                     "minimum": 0,
-                    "maximum": 200000                    
+                    "maximum": 200000
                 }
             }
         },
@@ -255,7 +267,13 @@
                 "EVSEIsolationStatus": {
                     "description": "Set the isolation status",
                     "type": "string",
-                    "enum": ["Invalid","Valid","Warning","Fault","No_IMD"]
+                    "enum": [
+                        "Invalid",
+                        "Valid",
+                        "Warning",
+                        "Fault",
+                        "No_IMD"
+                    ]
                 }
             }
         },
@@ -292,7 +310,9 @@
                 "powermeter": {
                     "description": "Measured dataset",
                     "type": "object",
-                    "required": ["timestamp"],
+                    "required": [
+                        "timestamp"
+                    ],
                     "properties": {
                         "timestamp": {
                             "description": "Timestamp of measurement",
@@ -309,7 +329,9 @@
                         "energy_Wh_import": {
                             "description": "Imported energy in Wh (from grid)",
                             "type": "object",
-                            "required": ["total"],
+                            "required": [
+                                "total"
+                            ],
                             "properties": {
                                 "total": {
                                     "description": "Sum value (which is relevant for billing)",
@@ -333,7 +355,9 @@
                         "energy_Wh_export": {
                             "description": "Exported energy in Wh (to grid)",
                             "type": "object",
-                            "required": ["total"],
+                            "required": [
+                                "total"
+                            ],
                             "properties": {
                                 "total": {
                                     "description": "Sum value (which is relevant for billing)",
@@ -352,11 +376,14 @@
                                     "type": "number"
                                 }
                             },
-                            "additionalProperties": false                },
+                            "additionalProperties": false
+                        },
                         "power_W": {
                             "description": "Instantaneous power in Watt. Negative values are exported, positive values imported Energy.",
                             "type": "object",
-                            "required": ["total"],
+                            "required": [
+                                "total"
+                            ],
                             "properties": {
                                 "total": {
                                     "description": "Sum value",
@@ -380,7 +407,9 @@
                         "voltage_V": {
                             "description": "Voltage in Volts",
                             "type": "object",
-                            "required": ["L1"],
+                            "required": [
+                                "L1"
+                            ],
                             "properties": {
                                 "L1": {
                                     "description": "L1 value only",
@@ -400,7 +429,9 @@
                         "current_A": {
                             "description": "Current in ampere",
                             "type": "object",
-                            "required": ["L1"],
+                            "required": [
+                                "L1"
+                            ],
                             "properties": {
                                 "L1": {
                                     "description": "L1 value only",
@@ -424,7 +455,9 @@
                         "frequency_Hz": {
                             "description": "Grid frequency in Hertz",
                             "type": "object",
-                            "required": ["L1"],
+                            "required": [
+                                "L1"
+                            ],
                             "properties": {
                                 "L1": {
                                     "description": "L1 value",
@@ -479,18 +512,17 @@
             "type": "null"
         },
         "AC_Close_Contactor": {
-            "description":"If true, the contactor should be closed",
+            "description": "If true, the contactor should be closed",
             "type": "boolean"
         },
         "AC_Open_Contactor": {
-            "description":"If true, the contactor should be opened",
+            "description": "If true, the contactor should be opened",
             "type": "boolean"
         },
         "V2G_Setup_Finished": {
             "description": "V2G_Setup_Finished from ISO15118-3. Trigger when EV sends a PowerDeliveryReq message with ChargeProgess equals Start or Stop",
             "type": "null"
         },
-
         "EVCCIDD": {
             "description": "Specifies the EVs identification in a readable format. It contains the MAC address of the EVCC",
             "type": "string",
@@ -499,12 +531,22 @@
         "SelectedPaymentOption": {
             "description": "This element is used for indicating the payment type",
             "type": "string",
-            "enum": ["Contract", "ExternalPayment"]
+            "enum": [
+                "Contract",
+                "ExternalPayment"
+            ]
         },
         "RequestedEnergyTransferMode": {
             "description": "Selected energy transfer mode for charging that is requested by the EVCC.",
             "type": "string",
-            "enum": ["AC_single_phase_core", "AC_three_phase_core", "DC_core", "DC_extended", "DC_combo_core", "DC_unique"]
+            "enum": [
+                "AC_single_phase_core",
+                "AC_three_phase_core",
+                "DC_core",
+                "DC_extended",
+                "DC_combo_core",
+                "DC_unique"
+            ]
         },
         "DepartureTime": {
             "description": "Optional: [RFC3339 UTC] This element is used to indicate when the vehicle intends to finish the charging process",
@@ -566,11 +608,20 @@
         "DC_EVErrorCode": {
             "description": "Indicates the EV internal status",
             "type": "string",
-            "enum": ["NO_ERROR","FAILED_RESSTemperatureInhibit","FAILED_EVShiftPosition",
-                "FAILED_ChargerConnectorLockFault","FAILED_EVRESSMalfunction",
-                "FAILED_ChargingCurrentdifferentia","FAILED_ChargingVoltageOutOfRange",
-                "Reserved_A","Reserved_B","Reserved_C","FAILED_ChargingSystemIncompatibility",
-                "NoData"]
+            "enum": [
+                "NO_ERROR",
+                "FAILED_RESSTemperatureInhibit",
+                "FAILED_EVShiftPosition",
+                "FAILED_ChargerConnectorLockFault",
+                "FAILED_EVRESSMalfunction",
+                "FAILED_ChargingCurrentdifferentia",
+                "FAILED_ChargingVoltageOutOfRange",
+                "Reserved_A",
+                "Reserved_B",
+                "Reserved_C",
+                "FAILED_ChargingSystemIncompatibility",
+                "NoData"
+            ]
         },
         "DC_EVRESSSOC": {
             "description": "State of charge of the EVs battery (RESS)",
@@ -581,7 +632,10 @@
         "EV_ChargingSession": {
             "description": "ChargingSession indicates the intention of the EVCC to either pause or terminate a V2G Communication Session",
             "type": "string",
-            "enum": ["Terminate", "Pause"]
+            "enum": [
+                "Terminate",
+                "Pause"
+            ]
         },
         "DC_BulkChargingComplete": {
             "description": "Optional: If set to TRUE, the EV indicates that bulk charge (approx. 80% SOC) is complete",
@@ -631,7 +685,6 @@
             "type": "string",
             "format": "date-time"
         },
-
         "EV_AppProtocol": {
             "description": "Debug_Lite - This request message provides a list of charging protocols supported by the EVCC",
             "type": "array",
@@ -673,7 +726,6 @@
             "minItems": 1,
             "maxItems": 20
         },
-
         "V2G_Messages": {
             "description": "Debug - This element contains all V2G elements and should be used for debug purposes only",
             "type": "object",
@@ -681,15 +733,36 @@
                 "V2G_Message_ID": {
                     "description": "This element contains the id of the v2g message body",
                     "type": "string",
-                    "enum": ["SupportedAppProtocolReq","SupportedAppProtocolRes","SessionSetupReq", 
-                        "SessionSetupRes","ServiceDiscoveryReq", "ServiceDiscoveryRes","ServiceDetailReq", 
-                        "ServiceDetailRes","PaymentServiceSelectionReq", "PaymentServiceSelectionRes",
-                        "AuthorizationReq", "AuthorizationRes","ChargeParameterDiscoveryReq", 
-                        "ChargeParameterDiscoveryRes","ChargingStatusReq", "ChargingStatusRes","PowerDeliveryReq", 
-                        "PowerDeliveryRes","CableCheckReq","CableCheckRes","PreChargeReq", "PreChargeRes",
-                        "CurrentDemandReq","CurrentDemandRes","WeldingDetectionReq", "WeldingDetectionRes",
-                        "SessionStopReq","SessionStopRes"
-                        ]
+                    "enum": [
+                        "SupportedAppProtocolReq",
+                        "SupportedAppProtocolRes",
+                        "SessionSetupReq",
+                        "SessionSetupRes",
+                        "ServiceDiscoveryReq",
+                        "ServiceDiscoveryRes",
+                        "ServiceDetailReq",
+                        "ServiceDetailRes",
+                        "PaymentServiceSelectionReq",
+                        "PaymentServiceSelectionRes",
+                        "AuthorizationReq",
+                        "AuthorizationRes",
+                        "ChargeParameterDiscoveryReq",
+                        "ChargeParameterDiscoveryRes",
+                        "ChargingStatusReq",
+                        "ChargingStatusRes",
+                        "PowerDeliveryReq",
+                        "PowerDeliveryRes",
+                        "CableCheckReq",
+                        "CableCheckRes",
+                        "PreChargeReq",
+                        "PreChargeRes",
+                        "CurrentDemandReq",
+                        "CurrentDemandRes",
+                        "WeldingDetectionReq",
+                        "WeldingDetectionRes",
+                        "SessionStopReq",
+                        "SessionStopRes"
+                    ]
                 },
                 "V2G_Message_XML": {
                     "description": "Contains the decoded EXI stream as V2G message XML file",
@@ -698,6 +771,5 @@
                 }
             }
         }
-
     }
 }

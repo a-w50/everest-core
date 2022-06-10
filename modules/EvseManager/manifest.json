@@ -6,6 +6,46 @@
 			"type": "string",
 			"default": "DE*PNX*E1234567*1"
 		},
+		"payment_enable_eim": {
+			"description": "Set to true to enable EIM (e.g. RFID card or mobile app) authorization",
+			"type": "boolean",
+			"default": true
+		},
+		"payment_enable_contract": {
+			"description": "Set to true to enable contract (aka plug and charge) authorization",
+			"type": "boolean",
+			"default": true
+		},
+		"ac_nominal_voltage": {
+			"description": "Nominal AC voltage between phase and neutral in Volt",
+			"type": "number",
+			"default": 230
+		},
+		"dc_current_regulation_tolerance": {
+			"description": "DC current regulation tolerance in Ampere",
+			"type": "number",
+			"default": 5
+		},
+		"dc_peak_current_ripple": {
+			"description": "DC peal current ripple in Ampere",
+			"type": "number",
+			"default": 5
+		},
+		"ev_receipt_required": {
+			"description": "Unsupported: request receipt from EV with HLC",
+			"type": "boolean",
+			"default": false
+		},
+		"debug_mode": {
+			"description": "Debug mode for HLC",
+			"type": "string",
+			"enum": [
+				"None",
+				"Lite",
+				"Full"
+			],
+			"default": "None"
+		},
 		"three_phases": {
 			"description": "Limit to three phases (true) or one phase (false)",
 			"type": "boolean",
@@ -36,8 +76,7 @@
 			"type": "string",
 			"enum": [
 				"AC",
-				"DC",
-				"AC_withBatteryPercentage"
+				"DC"
 			],
 			"default": "AC"
 		},
@@ -83,7 +122,7 @@
 			"max_connections": 1
 		},
 		"hlc": {
-			"interface": "ISO15118_ac_charger",
+			"interface": "ISO15118_charger",
 			"min_connections": 0,
 			"max_connections": 1
 		}

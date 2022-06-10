@@ -15,7 +15,7 @@
 #include <generated/evse_manager/Implementation.hpp>
 
 // headers for required interface implementations
-#include <generated/ISO15118_ac_charger/Interface.hpp>
+#include <generated/ISO15118_charger/Interface.hpp>
 #include <generated/auth/Interface.hpp>
 #include <generated/board_support_AC/Interface.hpp>
 #include <generated/powermeter/Interface.hpp>
@@ -34,6 +34,13 @@ namespace module {
 
 struct Conf {
     std::string evse_id;
+    bool payment_enable_eim;
+    bool payment_enable_contract;
+    double ac_nominal_voltage;
+    double dc_current_regulation_tolerance;
+    double dc_peak_current_ripple;
+    bool ev_receipt_required;
+    std::string debug_mode;
     bool three_phases;
     bool has_ventilation;
     std::string country_code;
@@ -52,7 +59,7 @@ public:
                 std::unique_ptr<evse_managerImplBase> p_evse, std::unique_ptr<energyImplBase> p_energy_grid,
                 std::unique_ptr<board_support_ACIntf> r_bsp, std::unique_ptr<powermeterIntf> r_powermeter,
                 std::unique_ptr<authIntf> r_auth, std::vector<std::unique_ptr<slacIntf>> r_slac,
-                std::vector<std::unique_ptr<ISO15118_ac_chargerIntf>> r_hlc, Conf& config) :
+                std::vector<std::unique_ptr<ISO15118_chargerIntf>> r_hlc, Conf& config) :
         ModuleBase(info),
         mqtt(mqtt_provider),
         p_evse(std::move(p_evse)),
@@ -72,7 +79,7 @@ public:
     const std::unique_ptr<powermeterIntf> r_powermeter;
     const std::unique_ptr<authIntf> r_auth;
     const std::vector<std::unique_ptr<slacIntf>> r_slac;
-    const std::vector<std::unique_ptr<ISO15118_ac_chargerIntf>> r_hlc;
+    const std::vector<std::unique_ptr<ISO15118_chargerIntf>> r_hlc;
 
     // ev@1fce4c5e-0ab8-41bb-90f7-14277703d2ac:v1
     // insert your public definitions here
@@ -85,6 +92,7 @@ public:
     std::string reserve_now(const int _reservation_id, const std::string& token,
                             const std::chrono::time_point<date::utc_clock>& valid_until, const std::string& parent_id);
     bool cancel_reservation();
+    bool get_hlc_enabled();
     sigslot::signal<json> signalReservationEvent;
     // ev@1fce4c5e-0ab8-41bb-90f7-14277703d2ac:v1
 
@@ -107,7 +115,19 @@ private:
     float local_max_current_limit;
     const float EVSE_ABSOLUTE_MAX_CURRENT = 80.0;
     bool slac_enabled;
+
+    std::mutex hlc_mutex;
+
     bool hlc_enabled;
+
+    bool get_hlc_waiting_for_auth_eim();
+    bool get_hlc_waiting_for_auth_pnc();
+    void set_hlc_waiting_for_auth_eim();
+    void set_hlc_waiting_for_auth_pnc();
+    void reset_hlc_waiting_for_auth();
+
+    bool hlc_waiting_for_auth_eim;
+    bool hlc_waiting_for_auth_pnc;
 
     // Reservations
     std::string reserved_auth_token;
